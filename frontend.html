@@ -157,14 +157,15 @@
                      `${feature.properties.housenumber} ${feature.properties.street}`;
           const city = feature.properties.city || feature.properties.district;
           const country = feature.properties.country;
-
+          const lat = feature.geometry.coordinates[1];
+          const lon = feature.geometry.coordinates[0];
           const div = document.createElement('div');
           div.className = 'suggestion';
           div.innerHTML = `<div class="content">${name}<div class="has-text-grey">${city}, ${country}</div></div>`;
           div.addEventListener('click', () => {
             addressInput.value = `${name}, ${city}, ${country}`;
             suggestionsDiv.innerHTML = '';
-            centerMapFromAddress(addressInput.value);
+            map.setView([lat, lon], 13);
           });
           suggestionsDiv.appendChild(div);
         });
@@ -196,32 +197,11 @@
                     `${feature.properties.housenumber} ${feature.properties.street}`;
         const city = feature.properties.city || feature.properties.district;
         const country = feature.properties.country;
-        const address = name + ", " + city + ", " + country; 
+        const address = name + ", " + city + ", " + country;
         addressInput.value = address;
         suggestionsDiv.innerHTML = '';
-        centerMapFromAddress(address);
+        map.setView([lat, lon], 13);
       });
-    }
-
-    // Reverse geocode address and set map center
-    function centerMapFromAddress(address) {
-      if (!map) return;
-
-      const query = address.trim();
-      if (query.length < 3) return;
-
-      fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.features.length > 0) {
-            const lat = data.features[0].geometry.coordinates[1];
-            const lng = data.features[0].geometry.coordinates[0];
-            map.setView([lat, lng], 13);
-          }
-        })
-        .catch(err => {
-          console.error('Reverse geocode error:', err);
-        });
     }
 
     // Submit Function
@@ -232,6 +212,8 @@
       const eventName = document.getElementById('eventName').value.trim();
       const datePicker = document.getElementById('datePicker').value;
       const address = document.getElementById('addressInput').value.trim();
+      //const lat = map.getCenter().lat;
+      //const lon = map.getCenter().lng;
 
       const data = {
         firstName,
@@ -239,7 +221,9 @@
         email,
         eventName,
         date: datePicker,
-        address
+        address,
+        //lat,
+        //lon
       };
 
       // Create a JSON file and show it
