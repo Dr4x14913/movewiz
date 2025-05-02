@@ -219,7 +219,7 @@
         const address = name + ", " + city + ", " + country;
         addressInput.value = address;
         suggestionsDiv.innerHTML = '';
-        map.setView([lat, lon], 13);
+        map.setView([lat, lng], 13);
       });
     }
 
@@ -292,6 +292,7 @@
 function showErrorMessage(message) {
   const modal = document.getElementById('errorModal');
   const modalMessage = document.getElementById('modalMessage');
+  modalMessage.innerHTML = '';
   message.forEach(error => {
     const li = document.createElement('li');
     li.textContent = error;
