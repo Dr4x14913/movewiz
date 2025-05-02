@@ -1,0 +1,228 @@
+x<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Merged App with JSON Output</title>
+  <!-- Bulma CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    .suggestion {
+      cursor: pointer;
+    }
+    .suggestion:hover {
+      background-color: #f0f0f0;
+    }
+    .notification {
+      margin-top: 1rem;
+    }
+    #map {
+      height: 400px;
+      width: 100%;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <section class="section">
+    <div class="container">
+      <h1 class="title is-3">Merged App</h1>
+
+      <!-- Form Section -->
+      <div class="box">
+        <h2 class="title is-4">Enter Details</h2>
+
+        <div class="field">
+          <label class="label">First Name</label>
+          <div class="control">
+            <input class="input" type="text" id="firstName" placeholder="Enter first name" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Last Name</label>
+          <div class="control">
+            <input class="input" type="text" id="lastName" placeholder="Enter last name" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Email</label>
+          <div class="control">
+            <input class="input" type="email" id="email" placeholder="Enter email" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Event Name</label>
+          <div class="control">
+            <input class="input" type="text" id="eventName" placeholder="Enter event name" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Date picker -->
+      <div class="box">
+        <div class="field">
+          <label class="label">Calendar Picker</label>
+          <div class="control">
+            <input type="date" id="datePicker" />
+          </div>
+        </div>
+      </div>
+      
+      <div class="box">
+        <!-- Address Autocomplete Section -->
+        <h2 class="title is-4">Address Autocomplete</h2>
+        <div class="field">
+          <p class="control has-icons-left">
+            <input class="input" type="text" id="addressInput" placeholder="Enter address..." />
+            <span class="icon is-left">
+              <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+            </span>
+          </p>
+        </div>
+        <div id="suggestions" class="notification is-light" style="max-height: 200px; overflow-y: auto; margin-top: 10px;"></div>
+
+        <!-- Leaflet Map Section -->
+        <h2 class="title is-4">Select Address on Map</h2>
+        <div id="map" class="map"></div>
+      </div>
+    </div>
+           
+    <button class="button is-primary" onclick="submitForm()">Submit</button>
+    <div id="result" class="notification is-info"></div>
+  </section>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Address Autocomplete Function
+    const addressInput = document.getElementById('addressInput');
+    const suggestionsDiv = document.getElementById('suggestions');
+
+    addressInput.addEventListener('input', async () => {
+      const query = addressInput.value.trim();
+      if (query.length < 3) {
+        suggestionsDiv.innerHTML = '';
+        return;
+      }
+
+      try {
+        const response = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`);
+        const data = await response.json();
+
+        suggestionsDiv.innerHTML = '';
+        if (data.features.length === 0) {
+          suggestionsDiv.innerHTML = '<div class="content has-text-centered"><p>No results found</p></div>';
+          return;
+        }
+
+        data.features.forEach(feature => {
+          const name = feature.properties.name || 
+                     `${feature.properties.housenumber} ${feature.properties.street}`;
+          const city = feature.properties.city || feature.properties.district;
+          const country = feature.properties.country;
+
+          const div = document.createElement('div');
+          div.className = 'suggestion';
+          div.innerHTML = `<div class="content">${name}</div><div class="content has-text-grey">${city}, ${country}</div>`;
+          div.addEventListener('click', () => {
+            addressInput.value = `${name}, ${city}, ${country}`;
+            suggestionsDiv.innerHTML = '';
+            centerMapFromAddress(addressInput.value);
+          });
+          suggestionsDiv.appendChild(div);
+        });
+      } catch (error) {
+        suggestionsDiv.innerHTML = '<div class="content has-text-centered"><p>Error fetching data</p></div>';
+        console.error(error);
+      }
+    });
+
+    // Leaflet Map Setup
+    let map = null;
+    let mapContainer = document.getElementById('map');
+    document.addEventListener( "DOMContentLoaded", showMap());
+
+    function showMap() {
+      map = L.map('map').setView([51.505, -0.09], 13); // Default to London
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      map.on('click', async function(e) {
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+//          const address = `${}, ${lng.toFixed(6)}`;
+        const response = await fetch(`https://photon.komoot.io/reverse/?lat=${lat.toFixed(6)}&lon=${lng.toFixed(6)}`);
+        const data = await response.json();
+        const feature = data.features[0];
+        const name = feature.properties.name || 
+                    `${feature.properties.housenumber} ${feature.properties.street}`;
+        const city = feature.properties.city || feature.properties.district;
+        const country = feature.properties.country;
+        const address = name + ", " + city + ", " + country; 
+        addressInput.value = address;
+        suggestionsDiv.innerHTML = '';
+        centerMapFromAddress(address);
+      });
+    }
+
+    // Reverse geocode address and set map center
+    function centerMapFromAddress(address) {
+      if (!map) return;
+
+      const query = address.trim();
+      if (query.length < 3) return;
+
+      fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.features.length > 0) {
+            const lat = data.features[0].geometry.coordinates[1];
+            const lng = data.features[0].geometry.coordinates[0];
+            map.setView([lat, lng], 13);
+          }
+        })
+        .catch(err => {
+          console.error('Reverse geocode error:', err);
+        });
+    }
+
+    // Submit Function
+    function submitForm() {
+      const firstName = document.getElementById('firstName').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const eventName = document.getElementById('eventName').value.trim();
+      const datePicker = document.getElementById('datePicker').value;
+      const address = document.getElementById('addressInput').value.trim();
+
+      const data = {
+        firstName,
+        lastName,
+        email,
+        eventName,
+        date: datePicker,
+        address
+      };
+
+      // Create a JSON file and download it
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'user_data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+
+      // Show success message
+      document.getElementById('result').textContent = 'Data saved as user_data.json';
+    }
+  </script>
+</body>
+</html>
