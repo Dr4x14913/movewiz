@@ -28,6 +28,25 @@
   </style>
 </head>
 <body>
+  <!-- Error Modal with Bulma -->
+  <div class="modal" id="errorModal">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Error</p>
+      </header>
+      <section class="modal-card-body">
+        <div class="content">
+          <b>The following errors has been found:</b>
+          <ul id="modalMessage"></ul>
+        </div>
+      </section>
+      <footer class="modal-card-foot">
+        <button class="modal-card-footer-item" onclick="closeModal()">Close</button>
+      </footer>
+    </div>
+  </div>
+
   <section class="section">
     <!-- Theme Toggle Button -->
     <nav class="navbar is-fixed-top">
@@ -204,8 +223,8 @@
       });
     }
 
-    // Submit Function
     function submitForm() {
+      // Extract and trim input values
       const firstName = document.getElementById('firstName').value.trim();
       const lastName = document.getElementById('lastName').value.trim();
       const email = document.getElementById('email').value.trim();
@@ -215,21 +234,76 @@
       //const lat = map.getCenter().lat;
       //const lon = map.getCenter().lng;
 
+      // Error messages
+      let isValid = true;
+      let errorMessage = [];
+
+      // Validate required fields
+      if (!firstName) {
+          isValid = false;
+          errorMessage.push('First Name is required');
+      }
+      if (!lastName) {
+          isValid = false;
+          errorMessage.push('Last Name is required. ');
+      }
+      if (!email) {
+          isValid = false;
+          errorMessage.push('Email is required. ');
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          isValid = false;
+          errorMessage.push('Invalid email format. ');
+      }
+      if (!eventName) {
+          isValid = false;
+          errorMessage.push('Event Name is required.');
+      }
+      if (!datePicker) {
+          isValid = false;
+          errorMessage.push('Date is required. ');
+      }
+      if (!address) {
+          isValid = false;
+          errorMessage.push('Address is required. ');
+      }
+
+      // If any field is invalid, show error modal
+      if (!isValid) {
+          showErrorMessage(errorMessage);
+          return;
+      }
+
+      // Proceed with form processing
       const data = {
-        firstName,
-        lastName,
-        email,
-        eventName,
-        date: datePicker,
-        address,
-        //lat,
-        //lon
+          firstName,
+          lastName,
+          email,
+          eventName,
+          datePicker,
+          address
+          //lat,
+          //lon
       };
 
-      // Create a JSON file and show it
       const json = JSON.stringify(data, null, 2);
       document.getElementById('result').textContent = json;
-    }
+  }
+
+function showErrorMessage(message) {
+  const modal = document.getElementById('errorModal');
+  const modalMessage = document.getElementById('modalMessage');
+  message.forEach(error => {
+    const li = document.createElement('li');
+    li.textContent = error;
+    modalMessage.appendChild(li);
+  });
+  modal.classList.add('is-active');
+}
+
+function closeModal() {
+  const modal = document.getElementById('errorModal');
+  modal.classList.remove('is-active');
+}
   </script>
 </body>
 </html>
