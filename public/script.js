@@ -144,7 +144,19 @@ function submitForm() {
     };
 
     const json = JSON.stringify(data, null, 2);
-    document.getElementById('result').textContent = json;
+
+    fetch('http://localhost:3000/api/createEvent', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: json
+    }).then(response => response.json()).then(result => {
+        document.getElementById('result').textContent = 'Your unique URL: ' + result.uniqueUrl;
+    }).catch(error => {
+        document.getElementById('result').textContent = 'An error occured:' + error;
+        console.error('Error:', error);
+    });
 }
 
 function showErrorMessage(message) {
