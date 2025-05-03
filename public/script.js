@@ -1,3 +1,6 @@
+var latitude;
+var longitude;
+
 function toggleTheme() {
     const toggleButton = document.getElementById('theme-toggle');
     const html_c = document.documentElement;
@@ -42,6 +45,8 @@ async function auto_complete_addr() {
                 addressInput.value = `${name}, ${city}, ${country}`;
                 suggestionsDiv.innerHTML = '';
                 map.setView([lat, lon], 13);
+                latitude = lat;
+                longitude = lon;
             });
             suggestionsDiv.appendChild(div);
         });
@@ -73,6 +78,8 @@ function showMap() {
         addressInput.value = address;
         suggestionsDiv.innerHTML = '';
         map.setView([lat, lng], 13);
+        latitude = lat;
+        longitude = lng;
     });
 }
 
@@ -131,7 +138,9 @@ function submitForm() {
         email,
         eventName,
         datePicker,
-        address
+        address,
+        latitude,
+        longitude
     };
 
     const json = JSON.stringify(data, null, 2);
