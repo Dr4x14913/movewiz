@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" class="theme-light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event Details - Movwiz</title>
+  <!-- Bulma CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- icons -->
+  <script defer src="https://use.fontawesome.com/releases/v5.15.4/js/all.js"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="script.js"></script>
+  <style>
+    .event-details {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .event-details .box {
+      margin-top: 2rem;
+    }
+    .event-details .columns {
+      margin-bottom: 1rem;
+    }
+    .event-details .subtitle {
+      font-weight: bold;
+    }
+    #map {
+      height: 300px;
+      width: 100%;
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <!-- Error Modal with Bulma -->
+  <div class="modal" id="errorModal" style="z-index: 1000;">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Error</p>
+      </header>
+      <section class="modal-card-body">
+        <div class="content">
+          <b>The following errors has been found:</b>
+          <ul id="modalMessage"></ul>
+        </div>
+      </section>
+      <footer class="modal-card-foot">
+        <button class="modal-card-footer-item" onclick="closeModal()">Close</button>
+      </footer>
+    </div>
+  </div>
+
+  <section class="section">
+    <!-- Theme Toggle Button -->
+    <nav class="navbar is-fixed-top">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="#">Movwiz</a>
+      </div>
+
+      <div class="navbar-end">
+        <a class="navbar-item button is-primary" id="theme-toggle" onclick="toggleTheme()">
+          <span class="icon">
+            <i class="fas fa-moon"></i>
+          </span>
+          <span>Toggle Theme</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="container">
+      <h1 class="title is-3">Event Details</h1>
+      <div class="event-details">
+        <div class="box">
+          <h2 class="title is-5">Event Information</h2>
+          <div class="columns">
+            <div class="column is-6">
+              <p class="subtitle is-6">Event Name</p>
+              <p id="eventNameDisplay"></p>
+            </div>
+            <div class="column is-6">
+              <p class="subtitle is-6">First Name</p>
+              <p id="firstNameDisplay"></p>
+            </div>
+          </div>
+          <div class="columns">
+            <div class="column is-6">
+              <p class="subtitle is-6">Last Name</p>
+              <p id="lastNameDisplay"></p>
+            </div>
+            <div class="column is-6">
+              <p class="subtitle is-6">Email</p>
+              <p id="emailDisplay"></p>
+            </div>
+          </div>
+          <div class="columns">
+            <div class="column is-6">
+              <p class="subtitle is-6">Date Picker</p>
+              <p id="datePickerDisplay"></p>
+            </div>
+            <div class="column is-6">
+              <p class="subtitle is-6">Address</p>
+              <p id="addressDisplay"></p>
+            </div>
+          </div>
+          <div class="columns">
+            <div class="column is-6">
+              <p class="subtitle is-6">Token</p>
+              <p id="tokenDisplay"></p>
+            </div>
+          </div>
+        </div>
+        <!-- Map Section -->
+        <div class="box">
+          <h2 class="title is-5">Map</h2>
+          <div id="map"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    let map = null;
+    document.addEventListener("DOMContentLoaded", () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get('token');
+
+      if (!token) {
+        showErrorMessage(["Token not provided"]);
+        return;
+      }
+
+      fetch(`/api/getEvent?token=${token}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          const event = data.event;
+          document.getElementById('eventNameDisplay').textContent = event.eventName;
+          document.getElementById('firstNameDisplay').textContent = event.firstName;
+          document.getElementById('lastNameDisplay').textContent = event.lastName;
+          document.getElementById('emailDisplay').textContent = event.email;
+          document.getElementById('datePickerDisplay').textContent = event.datePicker;
+          document.getElementById('addressDisplay').textContent = event.address;
+          document.getElementById('tokenDisplay').textContent = event.token;
+
+          // Initialize map if coordinates are available
+          if (event.latitude && event.longitude) {
+            initMap(event.latitude, event.longitude);
+          } else {
+            // Default map view if coordinates are missing
+            initMap(48.8566, 2.3522); // Paris coordinates
+          }
+        })
+        .catch(error => {
+          showErrorMessage(["Error fetching event details. Check your url.", error.message]);
+        });
+    });
+
+    function initMap(lat, lon) {
+      if (!map) {
+        map = L.map('map').setView([lat, lon], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+      }
+      map.setView([lat, lon]);
+    }
+  </script>
+</body>
+</html>

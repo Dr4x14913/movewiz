@@ -5,53 +5,83 @@ const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const PORT = 3000;
-
+/* ------------------------------------------------------------------------------------------------------------------ */
 // MySQL connection
-/*try {
-  const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'your_password', // Update with your MySQL password
-    database: 'event_db'       // Update with your database name
-  });
-} catch (err) {
-  console.log("Error connecting to mysql server: ", err);
-}*/
-// Serve static files from the 'public' directory
+/* ------------------------------------------------------------------------------------------------------------------ */
+const db = mysql.createConnection({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT || '3306',
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME  
+});
+
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+// Serve static files
+/* ------------------------------------------------------------------------------------------------------------------ */
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json()); 
 
-// Serve the main HTML file at the root
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'app.html'));
 });
 
-// API route to create an event
+app.get('/event', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'event.html'));
+});
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+// API routes
+/* ------------------------------------------------------------------------------------------------------------------ */
 app.post('/api/createEvent', (req, res) => {
   const { firstName, lastName, email, eventName, datePicker, address, latitude, longitude } = req.body;
 
   // Generate a unique URL
-  const uniqueUrl = `https://example.com/event/${uuidv4()}`;
+  const uniqToken = uuidv4();
+  const uniqueUrl = `https://example.com/event/${uniqToken}`;
 
   // Insert into MySQL
   const query = `
     INSERT INTO events (
-      firstName, lastName, email, eventName, datePicker, address, latitude, longitude, uniqueUrl
+      firstName, lastName, email, eventName, datePicker, address, latitude, longitude, token
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const values = [
-    firstName, lastName, email, eventName, datePicker, address, latitude, longitude, uniqueUrl
+    firstName, lastName, email, eventName, datePicker, address, latitude, longitude, uniqToken
   ];
 
-  /*db.query(query, values, (err, result) => {
+  db.query(query, values, (err, result) => {
     if (err) {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Database error' });
     }
     res.json({ uniqueUrl });
-  });*/
-  res.json({ uniqueUrl });
+  });
+  //res.json({ uniqueUrl });
+});
+
+app.get('/api/getEvent', (req, res) => {
+  const token = req.query.token;
+
+  if (!token) {
+    return res.status(400).send('Token is required');
+  }
+
+  db.query('SELECT * FROM events WHERE token = ?', [token], (error, results) => {
+    if (error) {
+      console.error('Database error:', error);
+      return res.status(500).send('Database error');
+    }
+
+    if (results.length === 0) {
+      return res.status(404).send('Event not found');
+    }
+
+    const event = results[0];
+    res.json({ event })
+  });
 });
 
 // Start the server
