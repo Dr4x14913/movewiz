@@ -20,9 +20,6 @@
     .suggestion:hover {
       background-color: #f0f0f0;
     }
-    .notification {
-      margin-top: 1rem;
-    }
     #map {
       height: 400px;
       width: 100%;
@@ -36,7 +33,7 @@
     <div class="modal-background"></div>
     <div class="modal-card">
       <header class="modal-card-head">
-        <p class="modal-card-title">Error</p>
+        <p class="modal-card-title">Error <div class="delete" onclick="closeModal()"></div></p>
       </header>
       <section class="modal-card-body">
         <div class="content">
@@ -44,9 +41,6 @@
           <ul id="modalMessage"></ul>
         </div>
       </section>
-      <footer class="modal-card-foot">
-        <button class="modal-card-footer-item" onclick="closeModal()">Close</button>
-      </footer>
     </div>
   </div>
 

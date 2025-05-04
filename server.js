@@ -39,7 +39,7 @@ app.post('/api/createEvent', (req, res) => {
 
   // Generate a unique URL
   const uniqToken = uuidv4();
-  const uniqueUrl = `https://example.com/event/${uniqToken}`;
+  const uniqueUrl = `${req.protocol}://${req.get('host')}/event?token=${uniqToken}`;
 
   // Insert into MySQL
   const query = `

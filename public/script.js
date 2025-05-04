@@ -152,7 +152,7 @@ function submitForm() {
         },
         body: json
     }).then(response => response.json()).then(result => {
-        document.getElementById('result').textContent = 'Your unique URL: ' + result.uniqueUrl;
+        document.getElementById('result').innerHTML = `Your unique URL: <a href=${result.uniqueUrl}>${result.uniqueUrl}</a>`;
     }).catch(error => {
         document.getElementById('result').textContent = 'An error occured:' + error;
         console.error('Error:', error);
