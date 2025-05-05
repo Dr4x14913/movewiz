@@ -19,8 +19,8 @@ services:
       - MARIADB_PASSWORD=mypswd
       - MARIADB_DATABASE=my_db
       - MARIADB_ROOT_PASSWORD=rootpswd
-    ports:
-      - '3306:3306'
+    #ports:
+    #  - '3306:3306'
     volumes:
       - mariadb_data:/var/lib/mysql/
 
