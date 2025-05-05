@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Merged App with JSON Output</title>
+  <title>Movewiz Beta</title>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="custom.css">
   <!-- Bulma CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
   <!-- Leaflet CSS -->
@@ -13,19 +15,6 @@
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
-  <style>
-    .suggestion {
-      cursor: pointer;
-    }
-    .suggestion:hover {
-      background-color: #f0f0f0;
-    }
-    #map {
-      height: 400px;
-      width: 100%;
-      margin-top: 1rem;
-    }
-  </style>
 </head>
 <body>
   <!-- Error Modal with Bulma -->
@@ -106,7 +95,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="box">
         <!-- Address Autocomplete Section -->
         <h2 class="title is-4">Address Autocomplete</h2>
@@ -126,7 +115,7 @@
       </div>
 
       <div class="box">
-        <button class="button is-primary" onclick="submitForm()">Submit</button>
+        <button class="button is-primary my-2" onclick="submitForm()">Submit</button>
         <div id="result" class="notification is-info"></div>
       </div>
     </div>
@@ -134,7 +123,8 @@
 </body>
 <script>
   let map = null;
-  document.addEventListener("DOMContentLoaded", showMap);
+  function initMapParis() {initMap(48.8566, 2.3522);}
+  document.addEventListener("DOMContentLoaded", initMapParis);
   const addressInput = document.getElementById('addressInput');
   addressInput.addEventListener('input', auto_complete_addr);
 </script>

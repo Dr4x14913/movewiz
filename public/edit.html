@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Event Details - Movwiz</title>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="custom.css">
   <!-- Bulma CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
   <!-- Leaflet CSS -->
@@ -13,26 +15,6 @@
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
-  <style>
-    .event-details {
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    .event-details .box {
-      margin-top: 2rem;
-    }
-    .event-details .columns {
-      margin-bottom: 1rem;
-    }
-    .event-details .subtitle {
-      font-weight: bold;
-    }
-    #map {
-      height: 300px;
-      width: 100%;
-      margin-top: 1rem;
-    }
-  </style>
 </head>
 <body>
   <!-- Error Modal with Bulma -->
@@ -71,39 +53,39 @@
       </div>
     </nav>
 
-    <div class="container">
-      <h1 class="title is-3">Event Details</h1>
-      <div class="event-details">
+    <h1 class="title is-3 mt-4">Event Details</h1>
+    <div class="container is-flex is-justify-content-center is-flex-direction-column">
         <div class="box">
           <h2 class="title is-5">Event Information</h2>
           <div class="columns">
             <div class="column is-6">
               <p class="subtitle is-6">Event Name</p>
-              <p id="eventNameDisplay"></p>
+              <input class="input" type="text" id="eventNameInput"></input>
             </div>
             <div class="column is-6">
               <p class="subtitle is-6">First Name</p>
-              <p id="firstNameDisplay"></p>
+              <input class="input" type="text" id="firstNameInput"></input>
             </div>
           </div>
           <div class="columns">
             <div class="column is-6">
               <p class="subtitle is-6">Last Name</p>
-              <p id="lastNameDisplay"></p>
+              <input class="input" type="text" id="lastNameInput"></input>
             </div>
             <div class="column is-6">
               <p class="subtitle is-6">Email</p>
-              <p id="emailDisplay"></p>
+              <input class="input" type="text" id="emailInput"></input>
             </div>
           </div>
           <div class="columns">
             <div class="column is-6">
               <p class="subtitle is-6">Date Picker</p>
-              <p id="datePickerDisplay"></p>
+              <input class="input" type="text" id="datePickerInput"></input>
             </div>
             <div class="column is-6">
               <p class="subtitle is-6">Address</p>
-              <p id="addressDisplay"></p>
+              <input class="input" type="text" id="addressInput"></input>
+              <div id="suggestions" class="notification is-light" style="max-height: 200px; overflow-y: auto; margin-top: 10px;"></div>
             </div>
           </div>
           <div class="columns">
@@ -123,10 +105,11 @@
 
   <script>
     let map = null;
-    document.addEventListener("DOMContentLoaded", () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const editToken = urlParams.get('editToken');
 
+    document.addEventListener("DOMContentLoaded", () => {
       if (!token) {
         showErrorMessage(["Token not provided"]);
         return;
@@ -141,12 +124,12 @@
         })
         .then(data => {
           const event = data.event;
-          document.getElementById('eventNameDisplay').textContent = event.eventName;
-          document.getElementById('firstNameDisplay').textContent = event.firstName;
-          document.getElementById('lastNameDisplay').textContent = event.lastName;
-          document.getElementById('emailDisplay').textContent = event.email;
-          document.getElementById('datePickerDisplay').textContent = event.datePicker;
-          document.getElementById('addressDisplay').textContent = event.address;
+          document.getElementById('eventNameInput').value = event.eventName;
+          document.getElementById('firstNameInput').value = event.firstName;
+          document.getElementById('lastNameInput').value = event.lastName;
+          document.getElementById('emailInput').value = event.email;
+          document.getElementById('datePickerInput').value = event.datePicker;
+          document.getElementById('addressInput').value = event.address;
 
           // Initialize map if coordinates are available
           if (event.latitude && event.longitude) {
@@ -161,15 +144,8 @@
         });
     });
 
-    function initMap(lat, lon) {
-      if (!map) {
-        map = L.map('map').setView([lat, lon], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-      }
-      map.setView([lat, lon]);
-    }
+    const addressInput = document.getElementById('addressInput');
+    addressInput.addEventListener('input', auto_complete_addr);
   </script>
 </body>
 </html>

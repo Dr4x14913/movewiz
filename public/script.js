@@ -56,31 +56,34 @@ async function auto_complete_addr() {
     }
 }
 
-function showMap() {
-    map = L.map('map').setView([51.505, -0.09], 13); // Default to London
+function initMap(lat, lng, interactive=true) { // Default to London
+    map = L.map('map').setView([lat, lng], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    map.on('click', async function (e) {
-        const suggestionsDiv = document.getElementById('suggestions');
-        const lat = e.latlng.lat;
-        const lng = e.latlng.lng;
+    if (interactive) {
+      map.on('click', async function (e) {
+          const suggestionsDiv = document.getElementById('suggestions');
+          const addressInput = document.getElementById('addressInput');
+          const lat = e.latlng.lat;
+          const lng = e.latlng.lng;
 
-        const response = await fetch(`https://photon.komoot.io/reverse/?lat=${lat.toFixed(6)}&lon=${lng.toFixed(6)}`);
-        const data = await response.json();
-        const feature = data.features[0];
-        const name = feature.properties.name ||
-            `${feature.properties.housenumber} ${feature.properties.street}`;
-        const city = feature.properties.city || feature.properties.district;
-        const country = feature.properties.country;
-        const address = name + ", " + city + ", " + country;
-        addressInput.value = address;
-        suggestionsDiv.innerHTML = '';
-        map.setView([lat, lng], 13);
-        latitude = lat;
-        longitude = lng;
-    });
+          const response = await fetch(`https://photon.komoot.io/reverse/?lat=${lat.toFixed(6)}&lon=${lng.toFixed(6)}`);
+          const data = await response.json();
+          const feature = data.features[0];
+          const name = feature.properties.name ||
+              `${feature.properties.housenumber} ${feature.properties.street}`;
+          const city = feature.properties.city || feature.properties.district;
+          const country = feature.properties.country;
+          const address = name + ", " + city + ", " + country;
+          addressInput.value = address;
+          suggestionsDiv.innerHTML = '';
+          map.setView([lat, lng], 13);
+          latitude = lat;
+          longitude = lng;
+      });
+    }
 }
 
 function submitForm() {
