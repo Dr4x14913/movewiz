@@ -4,7 +4,7 @@ CREATE TABLE events (
   lastName VARCHAR(255),
   email VARCHAR(255),
   eventName VARCHAR(255),
-  datePicker DATE,
+  datePicker VARCHAR(32),
   address TEXT,
   latitude DECIMAL(10,8),
   longitude DECIMAL(10,8),

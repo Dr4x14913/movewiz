@@ -1,5 +1,6 @@
 var latitude;
 var longitude;
+var marker;
 
 function toggleTheme() {
     const toggleButton = document.getElementById('theme-toggle');
@@ -32,21 +33,20 @@ async function auto_complete_addr() {
         }
 
         data.features.forEach(feature => {
-            const name = feature.properties.name ||
-                `${feature.properties.housenumber} ${feature.properties.street}`;
-            const city = feature.properties.city || feature.properties.district;
+            const name    = feature.properties.name || `${feature.properties.housenumber} ${feature.properties.street}`;
+            const city    = feature.properties.city || feature.properties.district;
             const country = feature.properties.country;
+
             const lat = feature.geometry.coordinates[1];
-            const lon = feature.geometry.coordinates[0];
+            const lng = feature.geometry.coordinates[0];
+
             const div = document.createElement('div');
             div.className = 'suggestion';
             div.innerHTML = `<div class="content">${name}<div class="has-text-grey">${city}, ${country}</div></div>`;
             div.addEventListener('click', () => {
                 addressInput.value = `${name}, ${city}, ${country}`;
                 suggestionsDiv.innerHTML = '';
-                map.setView([lat, lon], 13);
-                latitude = lat;
-                longitude = lon;
+                updateMapPos(lat,lng)
             });
             suggestionsDiv.appendChild(div);
         });
@@ -56,11 +56,13 @@ async function auto_complete_addr() {
     }
 }
 
-function initMap(lat, lng, interactive=true) { // Default to London
+function initMap(lat, lng, interactive=true) {
     map = L.map('map').setView([lat, lng], 13);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
+    
+    updateMapPos(lat, lng);
 
     if (interactive) {
       map.on('click', async function (e) {
@@ -79,14 +81,22 @@ function initMap(lat, lng, interactive=true) { // Default to London
           const address = name + ", " + city + ", " + country;
           addressInput.value = address;
           suggestionsDiv.innerHTML = '';
-          map.setView([lat, lng], 13);
-          latitude = lat;
-          longitude = lng;
+          updateMapPos(lat,lng)
       });
     }
 }
 
-function submitForm() {
+function updateMapPos(lat, lng){
+    map.setView([lat, lng], 13);
+    if (marker != undefined) {
+        map.removeLayer(marker);
+    }
+    marker = L.marker([lat, lng]).addTo(map);
+    latitude  = lat;
+    longitude = lng;
+}
+
+function submitForm(update=false, editToken="") {
     // Extract and trim input values
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
@@ -146,20 +156,38 @@ function submitForm() {
         longitude
     };
 
-    const json = JSON.stringify(data, null, 2);
+    if (update)
+        data['editToken'] = editToken;
 
-    fetch('http://localhost:3000/api/createEvent', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: json
-    }).then(response => response.json()).then(result => {
-        document.getElementById('result').innerHTML = `Your unique URL: <a href=${result.uniqueUrl}>${result.uniqueUrl}</a>`;
-    }).catch(error => {
-        document.getElementById('result').textContent = 'An error occured:' + error;
-        console.error('Error:', error);
-    });
+    const json = JSON.stringify(data, null, 2);
+    if (!update){
+        fetch('http://localhost:3000/api/createEvent', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: json
+        }).then(response => response.json()).then(result => {
+            document.getElementById('result').innerHTML = `Your unique URL that you can share: <a href=${result.readUrl}>${result.readUrl}</a></br>Your <b>private</b> URL for edition: <a href=${result.writeUrl}>${result.writeUrl}</a>`;
+        }).catch(error => {
+            document.getElementById('result').textContent = 'An error occured:' + error;
+            console.error('Error:', error);
+        });
+    } else {
+        console.log(json);
+        fetch('http://localhost:3000/api/editEvent', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: json
+        }).then(response => response.json()).then(result => {
+            document.getElementById('result').innerHTML = `Your unique URL that you can share: <a href=${result.readUrl}>${result.readUrl}</a></br>Your <b>private</b> URL for edition: <a href=${result.writeUrl}>${result.writeUrl}</a>`;
+        }).catch(error => {
+            document.getElementById('result').textContent = 'An error occured:' + error;
+            console.error('Error:', error);
+        });
+    }
 }
 
 function showErrorMessage(message) {

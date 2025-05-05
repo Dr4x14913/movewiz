@@ -44,7 +44,8 @@ app.post('/api/createEvent', (req, res) => {
   // Generate a unique URL
   const readToken = uuidv4();
   const editToken = uuidv4();
-  const uniqueUrl = `${req.protocol}://${req.get('host')}/event?token=${readToken}`;
+  const readUrl = `${req.protocol}://${req.get('host')}/event?token=${readToken}`;
+  const writeUrl = `${req.protocol}://${req.get('host')}/edit?token=${editToken}`;
 
   // Insert into MySQL
   const query = `
@@ -62,18 +63,21 @@ app.post('/api/createEvent', (req, res) => {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Database error' });
     }
-    res.json({ uniqueUrl });
+    res.json({readUrl, writeUrl });
   });
 });
 
 app.get('/api/getEvent', (req, res) => {
   const token = req.query.token;
-
+  const isEdit = req.query.isEdit;
+  let tokenType = "editToken";
   if (!token) {
     return res.status(400).send('Token is required');
   }
-
-  db.query('SELECT * FROM events WHERE readToken = ?', [token], (error, results) => {
+  if (!isEdit) {
+    tokenType = "readToken"
+  }
+  db.query(`SELECT * FROM events WHERE ${tokenType} = '${token}'`, (error, results) => {
     if (error) {
       console.error('Database error:', error);
       return res.status(500).send('Database error');
@@ -113,7 +117,7 @@ app.post('/api/editEvent', (req, res) => {
     const values = [];
 
     for (const key in updates) {
-      if (key === 'editToken' || 'readToken') continue; // Skip the tokens
+      if (key === 'editToken') continue; // Skip the tokens
       fields.push(`${key} = ?`);
       values.push(updates[key]);
     }
@@ -122,10 +126,10 @@ app.post('/api/editEvent', (req, res) => {
       return res.json({ event });
     }
 
-    const sql = `UPDATE events SET ${fields.join(', ')} WHERE editToken = ?`;
+    const sql = `UPDATE events SET ${fields.join(', ')} WHERE editToken = '${editToken}'`;
 
     // Prepare the values array (updates + editToken)
-    const valuesToUse = [...values, editToken];
+    const valuesToUse = [...values];
 
     db.query(sql, valuesToUse, (error, result) => {
       if (error) {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Event Details - Movwiz</title>
+  <title>Edit Event - Movwiz</title>
   <!-- Custom CSS -->
   <link rel="stylesheet" href="custom.css">
   <!-- Bulma CSS -->
@@ -35,6 +35,7 @@
       </footer>
     </div>
   </div>
+  <div style="height: 100px;"></div>
 
   <section class="section">
     <!-- Theme Toggle Button -->
@@ -42,6 +43,7 @@
       <div class="navbar-brand">
         <a class="navbar-item" href="#">Movwiz</a>
       </div>
+      <div class="navbar-item has-text-weight-bold">Edit Event Details</div>
 
       <div class="navbar-end">
         <a class="navbar-item button is-primary" id="theme-toggle" onclick="toggleTheme()">
@@ -53,52 +55,56 @@
       </div>
     </nav>
 
-    <h1 class="title is-3 mt-4">Event Details</h1>
-    <div class="container is-flex is-justify-content-center is-flex-direction-column">
-        <div class="box">
-          <h2 class="title is-5">Event Information</h2>
-          <div class="columns">
-            <div class="column is-6">
-              <p class="subtitle is-6">Event Name</p>
-              <input class="input" type="text" id="eventNameInput"></input>
-            </div>
-            <div class="column is-6">
-              <p class="subtitle is-6">First Name</p>
-              <input class="input" type="text" id="firstNameInput"></input>
-            </div>
+    <div class="container is-flex is-justify-content-center is-flex-direction-column" style="max-width: 800px;">
+      <div class="box">
+        <h2 class="title is-5">Event Information</h2>
+        <div class="columns">
+          <div class="column is-6">
+            <p class="title is-6">Event Name</p>
+            <input class="input" type="text" id="eventName"></input>
           </div>
-          <div class="columns">
-            <div class="column is-6">
-              <p class="subtitle is-6">Last Name</p>
-              <input class="input" type="text" id="lastNameInput"></input>
-            </div>
-            <div class="column is-6">
-              <p class="subtitle is-6">Email</p>
-              <input class="input" type="text" id="emailInput"></input>
-            </div>
-          </div>
-          <div class="columns">
-            <div class="column is-6">
-              <p class="subtitle is-6">Date Picker</p>
-              <input class="input" type="text" id="datePickerInput"></input>
-            </div>
-            <div class="column is-6">
-              <p class="subtitle is-6">Address</p>
-              <input class="input" type="text" id="addressInput"></input>
-              <div id="suggestions" class="notification is-light" style="max-height: 200px; overflow-y: auto; margin-top: 10px;"></div>
-            </div>
-          </div>
-          <div class="columns">
-            <div class="column is-6">
-              <p class="subtitle is-6">Token</p>
-            </div>
+          <div class="column is-6">
+            <p class="title is-6">First Name</p>
+            <input class="input" type="text" id="firstName"></input>
           </div>
         </div>
-        <!-- Map Section -->
-        <div class="box">
-          <h2 class="title is-5">Map</h2>
-          <div id="map"></div>
+        <div class="columns">
+          <div class="column is-6">
+            <p class="title is-6">Last Name</p>
+            <input class="input" type="text" id="lastName"></input>
+          </div>
+          <div class="column is-6">
+            <p class="title is-6">Email</p>
+            <input class="input" type="text" id="email"></input>
+          </div>
         </div>
+        <div class="columns">
+          <div class="column is-6">
+            <p class="title is-6">Date Picker</p>
+            <input class="input" type="datetime-local" id="datePicker"></input>
+          </div>
+          <div class="column is-6">
+            <p class="title is-6">Address</p>
+            <input class="input" type="text" id="addressInput"></input>
+            <div id="suggestions" class="notification is-light" style="max-height: 200px; overflow-y: auto; margin-top: 10px;"></div>
+          </div>
+        </div>
+        <div class="columns">
+          <div class="column is-6">
+            <button class="button is-primary" onclick="submitForm(true, token)">Update</input>
+          </div>
+        </div>
+      </div>
+
+      <!-- res box -->
+      <div class="box">
+        <div id="result" class="notification is-info"></div>
+      </div>
+
+      <!-- Map box -->
+      <div class="box">
+        <h2 class="title is-5">Map</h2>
+        <div id="map"></div>
       </div>
     </div>
   </section>
@@ -107,7 +113,6 @@
     let map = null;
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
-    const editToken = urlParams.get('editToken');
 
     document.addEventListener("DOMContentLoaded", () => {
       if (!token) {
@@ -115,7 +120,7 @@
         return;
       }
 
-      fetch(`/api/getEvent?token=${token}`)
+      fetch(`/api/getEvent?token=${token}&isEdit=1`)
         .then(response => {
           if (!response.ok) {
             throw new Error('Network response was not ok');
@@ -124,11 +129,11 @@
         })
         .then(data => {
           const event = data.event;
-          document.getElementById('eventNameInput').value = event.eventName;
-          document.getElementById('firstNameInput').value = event.firstName;
-          document.getElementById('lastNameInput').value = event.lastName;
-          document.getElementById('emailInput').value = event.email;
-          document.getElementById('datePickerInput').value = event.datePicker;
+          document.getElementById('eventName').value = event.eventName;
+          document.getElementById('firstName').value = event.firstName;
+          document.getElementById('lastName').value = event.lastName;
+          document.getElementById('email').value = event.email;
+          document.getElementById('datePicker').value = event.datePicker;
           document.getElementById('addressInput').value = event.address;
 
           // Initialize map if coordinates are available

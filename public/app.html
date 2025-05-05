@@ -91,7 +91,7 @@
         <div class="field">
           <label class="label">Calendar Picker</label>
           <div class="control">
-            <input type="date" id="datePicker" />
+            <input class="input" type="datetime-local" id="datePicker" />
           </div>
         </div>
       </div>
@@ -122,8 +122,8 @@
   </section>
 </body>
 <script>
-  let map = null;
-  function initMapParis() {initMap(48.8566, 2.3522);}
+  var map = null;
+  function initMapParis() {initMap(45.3422689, 5.8146864);}
   document.addEventListener("DOMContentLoaded", initMapParis);
   const addressInput = document.getElementById('addressInput');
   addressInput.addEventListener('input', auto_complete_addr);
