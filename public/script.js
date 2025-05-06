@@ -161,7 +161,7 @@ function submitForm(update=false, editToken="") {
 
     const json = JSON.stringify(data, null, 2);
     if (!update){
-        fetch('http://localhost:3000/api/createEvent', {
+        fetch('/api/createEvent', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -175,7 +175,7 @@ function submitForm(update=false, editToken="") {
         });
     } else {
         console.log(json);
-        fetch('http://localhost:3000/api/editEvent', {
+        fetch('/api/editEvent', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
