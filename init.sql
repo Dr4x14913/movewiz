@@ -11,3 +11,14 @@ CREATE TABLE events (
   readToken VARCHAR(255),
   editToken VARCHAR(255)
 );
+
+CREATE TABLE participants (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  firstName VARCHAR(255),
+  lastName VARCHAR(255),
+  email VARCHAR(255),
+  registrationDate VARCHAR(32),
+  hasCar BOOLEAN,
+  eventId INT,
+  FOREIGN KEY (eventId) REFERENCES events(id)
+);

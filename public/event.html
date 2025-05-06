@@ -56,57 +56,87 @@
     </nav>
     <div style="height: 100px;"></div>
 
-    <div class="container">
+    <div class="container is-flex is-justify-content-center is-flex-direction-column" style="max-width: 800px;">
       <h1 class="title is-3"></h1>
-      <div class="event-details">
-        <div class="box">
-          <h2 class="title is-5">Event Information</h2>
-          <div class="columns">
-            <div class="column is-6">
-              <p class="title is-6">Event Name</p>
-              <p id="eventNameDisplay"></p>
-            </div>
-            <div class="column is-6">
-              <p class="title is-6">First Name</p>
-              <p id="firstNameDisplay"></p>
-            </div>
+      <div class="box">
+        <h2 class="title is-5">Event Information</h2>
+        <div class="columns">
+          <div class="column is-6">
+            <p class="title is-6">Event Name</p>
+            <p id="eventNameDisplay"></p>
           </div>
-          <div class="columns">
-            <div class="column is-6">
-              <p class="title is-6">Last Name</p>
-              <p id="lastNameDisplay"></p>
-            </div>
-            <div class="column is-6">
-              <p class="title is-6">Email</p>
-              <p id="emailDisplay"></p>
-            </div>
-          </div>
-          <div class="columns">
-            <div class="column is-6">
-              <p class="title is-6">Date Picker</p>
-              <p id="datePickerDisplay"></p>
-            </div>
-            <div class="column is-6">
-              <p class="title is-6">Address</p>
-              <p id="addressDisplay"></p>
-            </div>
+          <div class="column is-6">
+            <p class="title is-6">First Name</p>
+            <p id="firstNameDisplay"></p>
           </div>
         </div>
-        <!-- Map Section -->
-        <div class="box">
-          <h2 class="title is-5">Map</h2>
-          <div id="map"></div>
+        <div class="columns">
+          <div class="column is-6">
+            <p class="title is-6">Last Name</p>
+            <p id="lastNameDisplay"></p>
+          </div>
+          <div class="column is-6">
+            <p class="title is-6">Email</p>
+            <p id="emailDisplay"></p>
+          </div>
         </div>
+        <div class="columns">
+          <div class="column is-6">
+            <p class="title is-6">Date Picker</p>
+            <p id="datePickerDisplay"></p>
+          </div>
+          <div class="column is-6">
+            <p class="title is-6">Address</p>
+            <p id="addressDisplay"></p>
+          </div>
+        </div>
+      </div>
+      <!-- Map Section -->
+      <div class="box">
+        <h2 class="title is-5">Map</h2>
+        <div id="map"></div>
+      </div>
+      <!-- Registration Section -->
+      <div class="box">
+        <h2 class="title is-5">Register for Event</h2>
+        <form id="registrationForm">
+          <div class="columns">
+            <div class="column is-6">
+              <label class="label">First Name</label>
+              <input class="input" type="text" id="firstName" required>
+            </div>
+            <div class="column is-6">
+              <label class="label">Last Name</label>
+              <input class="input" type="text" id="lastName" required>
+            </div>
+          </div>
+          <div class="columns">
+            <div class="column is-6">
+              <label class="label">Email</label>
+              <input class="input" type="email" id="email" required>
+            </div>
+            <div class="column is-6">
+              <label class="label">
+                <input type="checkbox" id="hasCar">
+                I have a car
+              </label>
+            </div>
+          </div>
+          <div class="columns">
+            <div class="column is-6">
+              <button class="button is-primary" type="submit">Register</button>
+            </div>
+          </div>
+        </form>
       </div>
     </div>
   </section>
 
   <script>
     let map = null;
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
     document.addEventListener("DOMContentLoaded", () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const token = urlParams.get('token');
-
       if (!token) {
         showErrorMessage(["Token not provided"]);
         return;
@@ -139,6 +169,42 @@
         .catch(error => {
           showErrorMessage(["Error fetching event details. Check your url.", error.message]);
         });
+    });
+
+    document.getElementById('registrationForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const firstName = document.getElementById('firstName').value;
+      const lastName = document.getElementById('lastName').value;
+      const email = document.getElementById('email').value;
+      const hasCar = document.getElementById('hasCar').checked;
+      const registrationDate = new Date().toISOString();
+
+      fetch('/api/registerParticipant', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email,
+          hasCar,
+          token,
+          registrationDate
+        })
+      })
+      .then(response => {
+        if (response.ok) {
+          alert('Registration successful!');
+          document.getElementById('registrationForm').reset();
+        } else {
+          throw new Error('Registration failed: ' + response.keys);
+        }
+      })
+      .catch(error => {
+        showErrorMessage(["Error registering participant. Check your network.", error.message]);
+      });
     });
   </script>
 </body>

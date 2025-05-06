@@ -147,6 +147,34 @@ app.post('/api/editEvent', (req, res) => {
   });
 });
 
+app.post('/api/registerParticipant', (req, res) => {
+  const { firstName, lastName, email, hasCar, token, registrationDate } = req.body;
+  const query = `
+  INSERT INTO participants (firstName, lastName, email, registrationDate, hasCar, eventId)
+  VALUES (?, ?, ?, ?, ?, ?)
+  `;
+  let eventId;
+
+  db.query(`SELECT id FROM events WHERE readToken='${token}'`, (error, results) => {
+    if (error) {
+      return res.status(500).json({ error: 'Failed to register participant '});
+    }
+    else if (results.length > 1) {
+      return res.status(501).json({ error: 'Multiples event found with this id, please contact an administrator.' });
+    } else {
+      eventId = results[0].id;
+      db.query(query, [firstName, lastName, email, registrationDate, hasCar, eventId], (error, results) => {
+        if (error) {
+          return res.status(502).json({ error: 'Failed to register participant' });
+        }
+        res.status(200).json({ message: 'Participant registered successfully' });
+      });
+    }
+  });
+
+
+
+});
 
 // Start the server
 app.listen(PORT, () => {

@@ -174,7 +174,6 @@ function submitForm(update=false, editToken="") {
             console.error('Error:', error);
         });
     } else {
-        console.log(json);
         fetch('/api/editEvent', {
             method: 'POST',
             headers: {
@@ -182,7 +181,7 @@ function submitForm(update=false, editToken="") {
             },
             body: json
         }).then(response => response.json()).then(result => {
-            document.getElementById('result').innerHTML = `Your unique URL that you can share: <a href=${result.readUrl}>${result.readUrl}</a></br>Your <b>private</b> URL for edition: <a href=${result.writeUrl}>${result.writeUrl}</a>`;
+          alert('Update successful!');
         }).catch(error => {
             document.getElementById('result').textContent = 'An error occured:' + error;
             console.error('Error:', error);

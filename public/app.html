@@ -52,72 +52,73 @@
 
     <div class="container">
       <h1 class="title is-3">Movwiz beta</h1>
+      <form id="eventForm">
+        <!-- Form Section -->
+        <div class="box">
+          <h2 class="title is-4">Enter Details</h2>
 
-      <!-- Form Section -->
-      <div class="box">
-        <h2 class="title is-4">Enter Details</h2>
+          <div class="field">
+            <label class="label">First Name</label>
+            <div class="control">
+              <input class="input" type="text" id="firstName" placeholder="Enter first name" required/>
+            </div>
+          </div>
 
-        <div class="field">
-          <label class="label">First Name</label>
-          <div class="control">
-            <input class="input" type="text" id="firstName" placeholder="Enter first name" />
+          <div class="field">
+            <label class="label">Last Name</label>
+            <div class="control">
+              <input class="input" type="text" id="lastName" placeholder="Enter last name" required/>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Email</label>
+            <div class="control">
+              <input class="input" type="email" id="email" placeholder="Enter email" required/>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label">Event Name</label>
+            <div class="control">
+              <input class="input" type="text" id="eventName" placeholder="Enter event name" required/>
+            </div>
           </div>
         </div>
 
-        <div class="field">
-          <label class="label">Last Name</label>
-          <div class="control">
-            <input class="input" type="text" id="lastName" placeholder="Enter last name" />
+        <!-- Date picker -->
+        <div class="box">
+          <div class="field">
+            <label class="label">Calendar Picker</label>
+            <div class="control">
+              <input class="input" type="datetime-local" id="datePicker" required/>
+            </div>
           </div>
         </div>
 
-        <div class="field">
-          <label class="label">Email</label>
-          <div class="control">
-            <input class="input" type="email" id="email" placeholder="Enter email" />
+        <div class="box">
+          <!-- Address Autocomplete Section -->
+          <h2 class="title is-4">Address Autocomplete</h2>
+          <div class="field">
+            <p class="control has-icons-left">
+              <input class="input" type="text" id="addressInput" placeholder="Enter address..." required/>
+              <span class="icon is-left">
+                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+              </span>
+            </p>
           </div>
+          <div id="suggestions" class="notification is-light" style="max-height: 200px; overflow-y: auto; margin-top: 10px;"></div>
+
+          <!-- Leaflet Map Section -->
+          <h2 class="title is-4">Select Address on Map</h2>
+          <div id="map" class="map"></div>
         </div>
 
-        <div class="field">
-          <label class="label">Event Name</label>
-          <div class="control">
-            <input class="input" type="text" id="eventName" placeholder="Enter event name" />
-          </div>
+        <div class="box">
+          <button class="button is-primary my-2" type="submit">Submit</button>
+          <div id="result" class="notification is-info"></div>
         </div>
-      </div>
-
-      <!-- Date picker -->
-      <div class="box">
-        <div class="field">
-          <label class="label">Calendar Picker</label>
-          <div class="control">
-            <input class="input" type="datetime-local" id="datePicker" />
-          </div>
-        </div>
-      </div>
-
-      <div class="box">
-        <!-- Address Autocomplete Section -->
-        <h2 class="title is-4">Address Autocomplete</h2>
-        <div class="field">
-          <p class="control has-icons-left">
-            <input class="input" type="text" id="addressInput" placeholder="Enter address..." />
-            <span class="icon is-left">
-              <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
-            </span>
-          </p>
-        </div>
-        <div id="suggestions" class="notification is-light" style="max-height: 200px; overflow-y: auto; margin-top: 10px;"></div>
-
-        <!-- Leaflet Map Section -->
-        <h2 class="title is-4">Select Address on Map</h2>
-        <div id="map" class="map"></div>
-      </div>
-
-      <div class="box">
-        <button class="button is-primary my-2" onclick="submitForm()">Submit</button>
-        <div id="result" class="notification is-info"></div>
-      </div>
+      </form>
     </div>
   </section>
 </body>
@@ -127,5 +128,11 @@
   document.addEventListener("DOMContentLoaded", initMapParis);
   const addressInput = document.getElementById('addressInput');
   addressInput.addEventListener('input', auto_complete_addr);
+  
+  document.getElementById('eventForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    submitForm();
+    window.scrollTo(0, document.body.scrollHeight);
+  });
 </script>
 </html>
