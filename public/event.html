@@ -129,6 +129,23 @@
           </div>
         </form>
       </div>
+      <!-- Participants Section -->
+      <div class="box">
+        <h2 class="title is-5">Participants</h2>
+        <table class="table is-fullwidth">
+          <thead>
+            <tr>
+              <th>First Name</th>
+              <th>Last Name</th>
+              <th>Email</th>
+              <th>Has Car</th>
+              <th>Registration Date</th>
+            </tr>
+          </thead>
+          <tbody id="participantsTableBody">
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 
@@ -136,6 +153,7 @@
     let map = null;
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
+
     document.addEventListener("DOMContentLoaded", () => {
       if (!token) {
         showErrorMessage(["Token not provided"]);
@@ -168,6 +186,40 @@
         })
         .catch(error => {
           showErrorMessage(["Error fetching event details. Check your url.", error.message]);
+        });
+
+      // Fetch participants using the readToken
+      fetch(`/api/getParticipants?token=${token}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(participants => {
+          const tbody = document.getElementById('participantsTableBody');
+          tbody.innerHTML = ''; // Clear any existing rows
+
+          if (participants.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td colspan="5" class="is-centered">No participants registered yet.</td>`;
+            tbody.appendChild(row);
+          } else {
+            participants.forEach(participant => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                <td>${participant.firstName}</td>
+                <td>${participant.lastName}</td>
+                <td>${participant.email}</td>
+                <td>${participant.hasCar ? 'Yes' : 'No'}</td>
+                <td>${participant.registrationDate}</td>
+              `;
+              tbody.appendChild(row);
+            });
+          }
+        })
+        .catch(error => {
+          showErrorMessage(["Error fetching participants. Check your network.", error.message]);
         });
     });
 

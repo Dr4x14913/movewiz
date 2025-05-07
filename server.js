@@ -171,9 +171,32 @@ app.post('/api/registerParticipant', (req, res) => {
       });
     }
   });
+});
 
+app.get('/api/getParticipants', (req, res) => {
+  const token = req.query.token;
 
+  // Step 1: Find the event with the provided readToken
+  db.query('SELECT * FROM events WHERE readToken = ?', [token], (error, results) => {
+    if (error) {
+      return res.status(500).json({ error: 'Database error, ' + error  });
+    }
 
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Event not found or invalid token' });
+    }
+
+    const eventId = results[0].id;
+
+    // Step 2: Fetch all participants for this event
+    db.query('SELECT * FROM participants WHERE eventId = ?', [eventId], (error, participants) => {
+      if (error) {
+        return res.status(500).json({ error: 'Database error, ' + error });
+      }
+
+      res.json(participants);
+    });
+  });
 });
 
 // Start the server
