@@ -62,36 +62,59 @@ function initMap(lat, lng, interactive=true) {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
     
-    updateMapPos(lat, lng);
+    // Add event marker
+    const eventMarker = L.marker([lat, lng], {
+        icon: L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+            shadowSize: [41, 41],
+            shadowAnchor: [12, 41]
+        })
+    }).addTo(map);
 
     if (interactive) {
-      map.on('click', async function (e) {
-          const suggestionsDiv = document.getElementById('suggestions');
-          const addressInput = document.getElementById('addressInput');
-          const lat = e.latlng.lat;
-          const lng = e.latlng.lng;
+        map.on('click', async function (e) {
+            const suggestionsDiv = document.getElementById('suggestions');
+            const addressInput = document.getElementById('addressInput');
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
 
-          const response = await fetch(`https://photon.komoot.io/reverse/?lat=${lat.toFixed(6)}&lon=${lng.toFixed(6)}`);
-          const data = await response.json();
-          const feature = data.features[0];
-          const name = feature.properties.name ||
-              `${feature.properties.housenumber} ${feature.properties.street}`;
-          const city = feature.properties.city || feature.properties.district;
-          const country = feature.properties.country;
-          const address = name + ", " + city + ", " + country;
-          addressInput.value = address;
-          suggestionsDiv.innerHTML = '';
-          updateMapPos(lat,lng)
-      });
+            const response = await fetch(`https://photon.komoot.io/reverse/?lat=${lat.toFixed(6)}&lon=${lng.toFixed(6)}`);
+            const data = await response.json();
+            const feature = data.features[0];
+            const name = feature.properties.name || `${feature.properties.housenumber} ${feature.properties.street}`;
+            const city = feature.properties.city || feature.properties.district;
+            const country = feature.properties.country;
+            const address = name + ", " + city + ", " + country;
+            addressInput.value = address;
+            suggestionsDiv.innerHTML = '';
+            // Add new marker for selected address (red)
+            const redIcon = L.icon({
+                iconUrl: '/assets/red-pin.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                shadowSize: [41, 41],
+                shadowAnchor: [12, 41],
+            });
+            updateMapPos(lat, lng, redIcon);
+        });
     }
 }
 
-function updateMapPos(lat, lng){
+function updateMapPos(lat, lng, icon=null){
     map.setView([lat, lng], 13);
     if (marker != undefined) {
         map.removeLayer(marker);
     }
-    marker = L.marker([lat, lng]).addTo(map);
+    if (!icon)
+        marker = L.marker([lat, lng]).addTo(map);
+    else
+        marker = L.marker([lat, lng], {icon: icon}).addTo(map);
     latitude  = lat;
     longitude = lng;
 }
