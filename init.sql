@@ -17,8 +17,11 @@ CREATE TABLE participants (
   firstName VARCHAR(255),
   lastName VARCHAR(255),
   email VARCHAR(255),
+  showEmail BOOLEAN,
   registrationDate VARCHAR(32),
   hasCar BOOLEAN,
+  latitude DECIMAL(10,8),
+  longitude DECIMAL(10,8),
   eventId INT,
   FOREIGN KEY (eventId) REFERENCES events(id)
 );
