@@ -83,7 +83,7 @@
         <div class="columns">
           <div class="column is-6">
             <p class="title is-6">Date Picker</p>
-            <p id="datePickerDisplay"></p>
+            <input class="input" disabled type="date" id="datePickerDisplay"></input>
           </div>
           <div class="column is-6">
             <p class="title is-6">Address</p>
@@ -173,7 +173,7 @@
           document.getElementById('firstNameDisplay').textContent = event.firstName;
           document.getElementById('lastNameDisplay').textContent = event.lastName;
           document.getElementById('emailDisplay').textContent = event.email;
-          document.getElementById('datePickerDisplay').textContent = new Date(event.datePicker).toString();
+          document.getElementById('datePickerDisplay').value = event.datePicker;
           document.getElementById('addressDisplay').textContent = event.address;
 
           // Initialize map if coordinates are available
