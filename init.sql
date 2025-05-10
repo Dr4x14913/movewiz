@@ -9,7 +9,8 @@ CREATE TABLE events (
   latitude DECIMAL(10,8),
   longitude DECIMAL(10,8),
   readToken VARCHAR(255),
-  editToken VARCHAR(255)
+  editToken VARCHAR(255),
+  comments TEXT
 );
 
 CREATE TABLE participants (
@@ -19,9 +20,11 @@ CREATE TABLE participants (
   email VARCHAR(255),
   showEmail BOOLEAN,
   registrationDate VARCHAR(32),
-  hasCar BOOLEAN,
+  mode VARCHAR(255),
   latitude DECIMAL(10,8),
   longitude DECIMAL(10,8),
   eventId INT,
+  comments TEXT,
+  phoneNumber VARCHAR(20),
   FOREIGN KEY (eventId) REFERENCES events(id)
 );

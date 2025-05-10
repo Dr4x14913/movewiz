@@ -1,6 +1,33 @@
 var latitude;
 var longitude;
 var marker;
+const redIcon = L.icon({
+    iconUrl: '/assets/red-pin.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    shadowSize: [41, 41],
+    shadowAnchor: [12, 41],
+});
+const yellowIcon = L.icon({
+    iconUrl: '/assets/yellow-pin.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    shadowSize: [41, 41],
+    shadowAnchor: [12, 41],
+});
+const blueIcon = L.icon({
+    iconUrl: '/assets/blue-pin.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    shadowSize: [41, 41],
+    shadowAnchor: [12, 41],
+});
 
 function toggleTheme() {
     const toggleButton = document.getElementById('theme-toggle');
@@ -56,24 +83,16 @@ async function auto_complete_addr() {
     }
 }
 
-function initMap(lat, lng, interactive=true) {
-    map = L.map('map').setView([lat, lng], 13);
+function initMap(lat=null, lng=null, interactive=true) {
+    map = L.map('map');
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
     
-    // Add event marker
-    const eventMarker = L.marker([lat, lng], {
-        icon: L.icon({
-            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-            shadowSize: [41, 41],
-            shadowAnchor: [12, 41]
-        })
-    }).addTo(map);
+    // Add event marker if provided
+    if (lat && lng){
+        const eventMarker = L.marker([lat, lng], {icon: blueIcon}).addTo(map);
+    }
 
     if (interactive) {
         map.on('click', async function (e) {
@@ -92,34 +111,25 @@ function initMap(lat, lng, interactive=true) {
             addressInput.value = address;
             suggestionsDiv.innerHTML = '';
             // Add new marker for selected address (red)
-            const redIcon = L.icon({
-                iconUrl: '/assets/red-pin.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-                shadowSize: [41, 41],
-                shadowAnchor: [12, 41],
-            });
-            updateMapPos(lat, lng, redIcon);
+            updateMapPos(lat, lng);
         });
     }
 }
 
-function updateMapPos(lat, lng, icon=null){
+function updateMapPos(lat, lng){
     map.setView([lat, lng], 13);
     if (marker != undefined) {
         map.removeLayer(marker);
     }
-    if (!icon)
+    if (!currentIcon)
         marker = L.marker([lat, lng]).addTo(map);
     else
-        marker = L.marker([lat, lng], {icon: icon}).addTo(map);
+        marker = L.marker([lat, lng], {icon: currentIcon}).addTo(map);
     latitude  = lat;
     longitude = lng;
 }
 
-function submitForm(update=false, editToken="") {
+function submitEventForm(update=false, editToken="") {
     // Extract and trim input values
     const firstName = document.getElementById('firstName').value.trim();
     const lastName = document.getElementById('lastName').value.trim();
@@ -127,6 +137,7 @@ function submitForm(update=false, editToken="") {
     const eventName = document.getElementById('eventName').value.trim();
     const datePicker = document.getElementById('datePicker').value;
     const address = document.getElementById('addressInput').value.trim();
+    const comments = document.getElementById('comments').value;
 
     // Error messages
     let isValid = true;
@@ -176,7 +187,8 @@ function submitForm(update=false, editToken="") {
         datePicker,
         address,
         latitude,
-        longitude
+        longitude,
+        comments
     };
 
     if (update)

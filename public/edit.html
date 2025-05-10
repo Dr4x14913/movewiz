@@ -58,42 +58,50 @@
     <div class="container is-flex is-justify-content-center is-flex-direction-column" style="max-width: 800px;">
       <div class="box">
         <h2 class="title is-5">Event Information</h2>
-        <div class="columns">
-          <div class="column is-6">
-            <p class="title is-6">Event Name</p>
-            <input class="input" type="text" id="eventName"></input>
+        <form id="updateForm">
+          <div class="columns">
+            <div class="column is-6">
+              <p class="title is-6">Event Name</p>
+              <input class="input" type="text" id="eventName"></input>
+            </div>
+            <div class="column is-6">
+              <p class="title is-6">First Name</p>
+              <input class="input" type="text" id="firstName"></input>
+            </div>
           </div>
-          <div class="column is-6">
-            <p class="title is-6">First Name</p>
-            <input class="input" type="text" id="firstName"></input>
+          <div class="columns">
+            <div class="column is-6">
+              <p class="title is-6">Last Name</p>
+              <input class="input" type="text" id="lastName"></input>
+            </div>
+            <div class="column is-6">
+              <p class="title is-6">Email</p>
+              <input class="input" type="text" id="email"></input>
+            </div>
           </div>
-        </div>
-        <div class="columns">
-          <div class="column is-6">
-            <p class="title is-6">Last Name</p>
-            <input class="input" type="text" id="lastName"></input>
+          <div class="columns">
+            <div class="column is-6">
+              <p class="title is-6">Date Picker</p>
+              <input class="input" type="date" id="datePicker"></input>
+            </div>
+            <div class="column is-6">
+              <p class="title is-6">Address</p>
+              <input class="input" type="text" id="addressInput" oninput="auto_complete_addr()"></input>
+              <div id="suggestions" class="notification is-light" style="max-height: 200px; overflow-y: auto; margin-top: 10px;"></div>
+            </div>
           </div>
-          <div class="column is-6">
-            <p class="title is-6">Email</p>
-            <input class="input" type="text" id="email"></input>
+          <div class="field">
+            <label class="label">Comments</label>
+            <div class="control">
+              <textarea class="textarea is-info" id="comments" placeholder="Comments that you want to add"></textarea>
+            </div>
           </div>
-        </div>
-        <div class="columns">
-          <div class="column is-6">
-            <p class="title is-6">Date Picker</p>
-            <input class="input" type="date" id="datePicker"></input>
+          <div class="columns">
+            <div class="column is-6">
+              <button class="button is-primary" type="submit">Update</input>
+            </div>
           </div>
-          <div class="column is-6">
-            <p class="title is-6">Address</p>
-            <input class="input" type="text" id="addressInput"></input>
-            <div id="suggestions" class="notification is-light" style="max-height: 200px; overflow-y: auto; margin-top: 10px;"></div>
-          </div>
-        </div>
-        <div class="columns">
-          <div class="column is-6">
-            <button class="button is-primary" onclick="submitForm(true, token)">Update</input>
-          </div>
-        </div>
+        </form>
       </div>
 
       <!-- res box -->
@@ -113,6 +121,7 @@
     let map = null;
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
+    const currentIcon = blueIcon;
 
     document.addEventListener("DOMContentLoaded", () => {
       if (!token) {
@@ -135,22 +144,24 @@
           document.getElementById('email').value = event.email;
           document.getElementById('datePicker').value = event.datePicker;
           document.getElementById('addressInput').value = event.address;
+          document.getElementById('comments').value = event.comments;
 
           // Initialize map if coordinates are available
           if (event.latitude && event.longitude) {
-            initMap(event.latitude, event.longitude);
-          } else {
-            // Default map view if coordinates are missing
-            initMap(48.8566, 2.3522); // Paris coordinates
+            initMap();
+            updateMapPos(event.latitude, event.longitude);
           }
-        })
+         })
         .catch(error => {
           showErrorMessage(["Error fetching event details. Check your url.", error.message]);
         });
     });
 
-    const addressInput = document.getElementById('addressInput');
-    addressInput.addEventListener('input', auto_complete_addr);
+    document.getElementById('updateForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      submitEventForm(update=true, token);
+      window.scrollTo(0, document.body.scrollHeight);
+    });
   </script>
 </body>
 </html>

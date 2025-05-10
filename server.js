@@ -39,7 +39,7 @@ app.get('/edit', (req, res) => {
 // API routes
 /* ------------------------------------------------------------------------------------------------------------------ */
 app.post('/api/createEvent', (req, res) => {
-  const { firstName, lastName, email, eventName, datePicker, address, latitude, longitude } = req.body;
+  const { firstName, lastName, email, eventName, datePicker, address, latitude, longitude, comments } = req.body;
 
   // Generate a unique URL
   const readToken = uuidv4();
@@ -50,12 +50,12 @@ app.post('/api/createEvent', (req, res) => {
   // Insert into MySQL
   const query = `
     INSERT INTO events (
-      firstName, lastName, email, eventName, datePicker, address, latitude, longitude, readToken, editToken
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      firstName, lastName, email, eventName, datePicker, address, latitude, longitude, readToken, editToken, comments
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   const values = [
-    firstName, lastName, email, eventName, datePicker, address, latitude, longitude, readToken, editToken
+    firstName, lastName, email, eventName, datePicker, address, latitude, longitude, readToken, editToken, comments,
   ];
 
   db.query(query, values, (err, result) => {
@@ -148,10 +148,10 @@ app.post('/api/editEvent', (req, res) => {
 });
 
 app.post('/api/registerParticipant', (req, res) => {
-  const { firstName, lastName, email, hasCar, showEmail, token, registrationDate } = req.body;
+  const { firstName, lastName, email, mode, showEmail, token, registrationDate, latitude, longitude, comments, phoneNumber } = req.body;
   const query = `
-  INSERT INTO participants (firstName, lastName, email, registrationDate, hasCar, showEmail, eventId)
-  VALUES (?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO participants (firstName, lastName, email, registrationDate, mode, showEmail, eventId, latitude, longitude, comments, phoneNumber)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
   let eventId;
 
@@ -165,7 +165,7 @@ app.post('/api/registerParticipant', (req, res) => {
       return res.status(501).json({ error: 'Multiples event found with this id, please contact an administrator.' });
     } else {
       eventId = results[0].id;
-      db.query(query, [firstName, lastName, email, registrationDate, hasCar, showEmail, eventId], (error, results) => {
+      db.query(query, [firstName, lastName, email, registrationDate, mode, showEmail, eventId, latitude, longitude, comments, phoneNumber], (error, results) => {
         if (error) {
           console.log('Failed to register participant' + error);
           return res.status(502).json({ error: 'Failed to register participant' });

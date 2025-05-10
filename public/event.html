@@ -11,7 +11,7 @@
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <!-- icons -->
-  <script defer src="https://use.fontawesome.com/releases/v5.15.4/js/all.js"></script>
+  <script defer src="https://use.fontawesome.com/releases/v6.7.2/js/all.js"></script>
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
@@ -90,6 +90,12 @@
             <p id="addressDisplay"></p>
           </div>
         </div>
+        <div class="field">
+          <label class="label">Comments</label>
+          <div class="control">
+            <textarea class="textarea is-info" id="comments" placeholder="Comments that you want to add" disabled></textarea>
+          </div>
+        </div>
       </div>
       <!-- Map Section -->
       <div class="box">
@@ -116,12 +122,25 @@
               <input class="input" type="email" id="email" required>
             </div>
             <div class="column is-6">
-              <label class="label">
-                <input type="checkbox" id="hasCar"/> I have a car
-              </label>
-              <label class="label">
-                <input type="checkbox" id="showEmail"/> Show Email
-              </label>
+              <div class="field">
+                <label class="label">I am:</label>
+                <div class="control">
+                  <div class="select">
+                    <select id="mode">
+                      <option value="conductor">conductor</option>
+                      <option value="passenger">passenger</option>
+                      <option value="passenger or conductor">passenger or conductor</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="field">
+                <div class="control">
+                  <label class="label">
+                    <input type="checkbox" id="hideEmail"/> Hide my email
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
           <div class="columns">
@@ -135,6 +154,18 @@
           </div>
           <div class="columns">
             <div class="column is-6">
+              <label class="label">Phone number</label>
+              <input class="input is-info" type="text" id="phoneNumber"/>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label">Comments</label>
+            <div class="control">
+              <textarea class="textarea is-info" id="registerComments" placeholder="Comments that you want to add"></textarea>
+            </div>
+          </div>
+          <div class="columns">
+            <div class="column is-6">
               <button class="button is-primary" type="submit">Register</button>
             </div>
           </div>
@@ -143,14 +174,16 @@
       <!-- Participants Section -->
       <div class="box">
         <h2 class="title is-5">Participants</h2>
-        <table class="table is-fullwidth">
+        <table class="table is-fullwidth is-hoverable">
           <thead>
             <tr>
               <th>First Name</th>
               <th>Last Name</th>
-              <th>Email</th>
-              <th>Has Car</th>
-              <th>Registration Date</th>
+              <th><i class="fa-solid fa-envelope"></i></th>
+              <th><i class="fa-solid fa-car-side"></i></th>
+              <th><i class="fa-solid fa-calendar-minus"></i></th>
+              <th><i class="fa-solid fa-phone"></i></th>
+              <th><i class="fas fa-map-location-dot"></i></th>
             </tr>
           </thead>
           <tbody id="participantsTableBody">
@@ -161,11 +194,13 @@
   </section>
 
   <script>
+    const currentIcon = redIcon;
     let map = null;
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
 
     document.addEventListener("DOMContentLoaded", () => {
+      const bounds = new L.LatLngBounds();
       if (!token) {
         showErrorMessage(["Token not provided"]);
         return;
@@ -186,63 +221,91 @@
           document.getElementById('emailDisplay').textContent = event.email;
           document.getElementById('datePickerDisplay').value = event.datePicker;
           document.getElementById('addressDisplay').textContent = event.address;
+          document.getElementById('comments').value = event.comments;
 
           // Initialize map if coordinates are available
           if (event.latitude && event.longitude) {
+            bounds.extend([event.latitude, event.longitude]);
             initMap(event.latitude, event.longitude);
           } else {
             // Default map view if coordinates are missing
             initMap(48.8566, 2.3522); // Paris coordinates
           }
+
+          // Fetch participants using the readToken
+          fetch(`/api/getParticipants?token=${token}`)
+            .then(response => {
+              if (!response.ok) {
+                throw new Error('Network response was not ok');
+              }
+              return response.json();
+            })
+            .then(participants => {
+              const tbody = document.getElementById('participantsTableBody');
+              tbody.innerHTML = ''; // Clear any existing rows
+
+              if (participants.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="5" class="is-centered">No participants registered yet.</td>`;
+                tbody.appendChild(row);
+              } else {
+                participants.forEach(participant => {
+                  const row = document.createElement('tr');
+                  const formatedDate = new Date(participant.registrationDate).toLocaleDateString();
+                  row.innerHTML = `
+                    <td>${participant.firstName}</td>
+                    <td>${participant.lastName}</td>
+                    <td>${participant.showEmail ? participant.email : '<i class="fa-solid fa-paper-plane"></i>'}</td>
+                    <td>${participant.mode}</td>
+                    <td>${formatedDate}</td>
+                    <td>${participant.phoneNumber}</td>
+                    <td><button class="button is-size-7 is-warning is-multiline"><i class="fas fa-map-location-dot"></i></button></td>
+                  `;
+                  if (participant.latitude && participant.longitude) {
+                    bounds.extend([participant.latitude, participant.longitude]);
+                    const m = L.marker([participant.latitude, participant.longitude], {icon: yellowIcon}).addTo(map);
+                    m.bindPopup(`
+                      <b>${participant.firstName} ${participant.lastName}</b><br>
+                      ${participant.showEmail ? participant.email : 'Email Hidden'}<br>
+                      <p>${participant.comments ? participant.comments : '-'}</p>`
+                    );
+                    row.addEventListener('click', () => {
+                        map.setView([participant.latitude, participant.longitude], 13);
+                        m.openPopup();
+                        const mapElement = document.getElementById('map');
+                        mapElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    });
+                  }
+                  tbody.appendChild(row);
+                });
+              }
+              map.fitBounds(bounds, { maxZoom: 13 });
+            })
+            .catch(error => {
+              showErrorMessage(["Error fetching participants. Check your network.", error.message]);
+            });
         })
         .catch(error => {
           showErrorMessage(["Error fetching event details. Check your url.", error.message]);
-        });
-
-      // Fetch participants using the readToken
-      fetch(`/api/getParticipants?token=${token}`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(participants => {
-          const tbody = document.getElementById('participantsTableBody');
-          tbody.innerHTML = ''; // Clear any existing rows
-
-          if (participants.length === 0) {
-            const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="5" class="is-centered">No participants registered yet.</td>`;
-            tbody.appendChild(row);
-          } else {
-            participants.forEach(participant => {
-              const row = document.createElement('tr');
-              row.innerHTML = `
-                <td>${participant.firstName}</td>
-                <td>${participant.lastName}</td>
-                <td>${participant.showEmail ? participant.email : 'Hidden email'}</td>
-                <td>${participant.hasCar ? 'Yes' : 'No'}</td>
-                <td>${participant.registrationDate}</td>
-              `;
-              tbody.appendChild(row);
-            });
-          }
-        })
-        .catch(error => {
-          showErrorMessage(["Error fetching participants. Check your network.", error.message]);
         });
     });
 
     document.getElementById('registrationForm').addEventListener('submit', function(event) {
       event.preventDefault();
 
+      if(latitude == undefined || longitude == undefined){
+          errorMessage = ['Please select a valid addresse or click on the map.'];
+          showErrorMessage(errorMessage);
+          return;
+      }
       const firstName = document.getElementById('firstName').value;
       const lastName = document.getElementById('lastName').value;
       const email = document.getElementById('email').value;
-      const hasCar = document.getElementById('hasCar').checked;
-      const showEmail = document.getElementById('showEmail').checked;
+      const mode = document.getElementById('mode').value;
+      const showEmail = !document.getElementById('hideEmail').checked;
       const registrationDate = new Date().toISOString();
+      const comments = document.getElementById('registerComments').value;
+      const phoneNumber = document.getElementById('phoneNumber').value;
 
       fetch('/api/registerParticipant', {
         method: 'POST',
@@ -253,10 +316,14 @@
           firstName,
           lastName,
           email,
-          hasCar,
+          mode,
           showEmail,
           token,
-          registrationDate
+          registrationDate,
+          latitude,
+          longitude,
+          comments,
+          phoneNumber,
         })
       })
       .then(response => {
