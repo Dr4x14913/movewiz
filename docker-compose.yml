@@ -6,7 +6,7 @@ services:
       dockerfile: server.Dockerfile
     env_file: stack.env
     ports:
-      - '3000:3000'
+      - '3033:3000'
     restart: unless-stopped
     depends_on:
       db:
