@@ -26,5 +26,6 @@ CREATE TABLE participants (
   eventId INT,
   comments TEXT,
   phoneNumber VARCHAR(20),
+  notifyMe BOOLEAN,
   FOREIGN KEY (eventId) REFERENCES events(id)
 );

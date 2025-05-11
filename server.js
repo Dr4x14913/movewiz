@@ -2,6 +2,8 @@ const express = require('express');
 const path = require('path');
 const mysql = require('mysql2');
 const { v4: uuidv4 } = require('uuid');
+const nodemailer = require('nodemailer');
+const ejs = require('ejs');
 
 const app = express();
 const PORT = 3000;
@@ -15,8 +17,64 @@ const db = mysql.createConnection({
   password: process.env.DB_PASS,
   database: process.env.DB_NAME
 });
+/* ------------------------------------------------------------------------------------------------------------------ */
+// SMTP configuration
+/* ------------------------------------------------------------------------------------------------------------------ */
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  secure: process.env.SMTP_SECURE === 'true',
+  requireTLS: process.env.SMTP_TLS === 'true', 
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
+// Function to send email
+function sendEmail(to, subject, html) {
+  const mailOptions = {
+    from: process.env.SMTP_FROM || 'no-reply@yourdomain.com',
+    to,
+    subject,
+    html
+  };
 
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error('Error sending email:', error);
+    } else {
+      console.log('Email sent:', info.messageId);
+    }
+  });
+}
 
+function notifyAll(eventId, ownerEmail, subject, data, ejsFile) {
+  db.query(`SELECT email FROM participants WHERE notifyMe = 1 AND eventId = ${eventId}`, (error, results) => {
+    if (error) {
+      console.error('Database error:', error);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    // Render the EJS template once
+    ejs.renderFile(path.join(__dirname, 'mail_templates', ejsFile), data, (err, html) => {
+      if (err) {
+        console.error('Error rendering email template:', err);
+        return res.status(500).json({ error: 'Error rendering email template:' + err});
+      }
+
+      // Send to the owner
+      sendEmail(ownerEmail, subject, html);
+
+      // Send to all participants
+      results.forEach(participant => {
+        sendEmail(participant.email, subject, html);
+      });
+
+      // Optional: Log confirmation
+      console.log(`Emails sent to ${results.length} participants and owner.`);
+    });
+  });
+}
 /* ------------------------------------------------------------------------------------------------------------------ */
 // Serve static files
 /* ------------------------------------------------------------------------------------------------------------------ */
@@ -63,6 +121,15 @@ app.post('/api/createEvent', (req, res) => {
       console.error('Database error:', err);
       return res.status(500).json({ error: 'Database error' });
     }
+
+    // Send email to event owner
+    ejs.renderFile(path.join(__dirname, 'mail_templates', 'event_creation.ejs'), { eventName, eventAddress: address, latitude, longitude, eventDate: datePicker, eventComments: comments, publicUrl: readUrl, privateUrl: writeUrl}, (err, html) => {
+      if (err)
+        console.error(err);
+      else {
+        sendEmail(email,"[Movewiz] New Event Created", html);
+      }
+    });
     res.json({readUrl, writeUrl });
   });
 });
@@ -148,14 +215,16 @@ app.post('/api/editEvent', (req, res) => {
 });
 
 app.post('/api/registerParticipant', (req, res) => {
-  const { firstName, lastName, email, mode, showEmail, token, registrationDate, latitude, longitude, comments, phoneNumber } = req.body;
+  const { firstName, lastName, email, mode, showEmail, token, registrationDate, latitude, longitude, comments, phoneNumber, notifyMe } = req.body;
   const query = `
-  INSERT INTO participants (firstName, lastName, email, registrationDate, mode, showEmail, eventId, latitude, longitude, comments, phoneNumber)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO participants (firstName, lastName, email, registrationDate, mode, showEmail, eventId, latitude, longitude, comments, phoneNumber, notifyMe)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
   let eventId;
+  let ownerEmail;
+  let eventName;
 
-  db.query(`SELECT id FROM events WHERE readToken='${token}'`, (error, results) => {
+  db.query(`SELECT id, email, eventName FROM events WHERE readToken='${token}'`, (error, results) => {
     if (error) {
       console.log('Failed to register participant ');
       return res.status(500).json({ error: 'Failed to register participant '});
@@ -165,11 +234,14 @@ app.post('/api/registerParticipant', (req, res) => {
       return res.status(501).json({ error: 'Multiples event found with this id, please contact an administrator.' });
     } else {
       eventId = results[0].id;
-      db.query(query, [firstName, lastName, email, registrationDate, mode, showEmail, eventId, latitude, longitude, comments, phoneNumber], (error, results) => {
+      ownerEmail = results[0].email
+      eventName = results[0].eventName
+      db.query(query, [firstName, lastName, email, registrationDate, mode, showEmail, eventId, latitude, longitude, comments, phoneNumber, notifyMe], (error, results) => {
         if (error) {
           console.log('Failed to register participant' + error);
           return res.status(502).json({ error: 'Failed to register participant' });
         }
+        notifyAll(eventId, ownerEmail, "[Movewiz] A new partitipant joined the event !", {eventName, firstName, lastName, mode, email: showEmail ? email : "Hidden email", latitude, longitude, comments, phoneNumber, url: `${req.protocol}://${req.get('host')}/event?token=${token}`}, "new_participant.ejs");
         res.status(200).json({ message: 'Participant registered successfully' });
       });
     }
