@@ -4,40 +4,56 @@
   <meta charset="UTF-8" />
   <title>Event Created</title>
 </head>
-<body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #e6f7e6; margin: 0; padding: 0; max-width: 600px; margin: auto; border-radius: 12px; box-shadow: 0 4px 20px rgba(0, 123, 69, 0.1); overflow: hidden;">
+<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
 
   <!-- Header -->
-  <div style="background-color: #28a745; color: white; padding: 24px; text-align: center;">
-    <h1 style="margin: 0; font-size: 1.5rem; color: #ffffff;">Event Created: <%= eventName %></h1>
+  <div style="background-color: #1c8046; padding: 20px; text-align: center; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+    <h1 style="margin: 0; color: white;">Event Created: <%= eventName %></h1>
   </div>
 
   <!-- Body -->
-  <div style="padding: 24px; background-color: #ffffff;">
+  <div style="padding: 20px; background-color: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
 
-    <h2 style="color: #2e7d32; margin-bottom: 16px; text-align: center;">Event Details</h2>
+    <h2 style="color: #27AE60;">Event Details</h2>
 
-    <div style="display: flex; flex-direction: column; gap: 12px;">
-      <p><strong>Event Name:</strong> <%= eventName %></p>
-      <p><strong>Date:</strong> <%= eventDate %></p>
-      <p><strong>Address:</strong> <%= eventAddress %></p>
-      <p><strong>Latitude:</strong> <%= latitude %></p>
-      <p><strong>Longitude:</strong> <%= longitude %></p>
-    </div>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd; width: 30%;"><strong>Event Name:</strong></td>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><%= eventName %></td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Date:</strong></td>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><%= eventDate %></td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Address:</strong></td>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><%= eventAddress %></td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Latitude:</strong></td>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><%= latitude %></td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Longitude:</strong></td>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><%= longitude %></td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Public url:</strong></td>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><a href="<%= publicUrl %>" style="color: #27AE60; text-decoration: none;"><%= publicUrl %></a></p></td>
+      </tr>
+      <tr>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>Private url:</strong></td>
+        <td style="padding: 8px; border-bottom: 1px solid #ddd;"><a href="<%= privateUrl %>" style="color: #27AE60; text-decoration: none;"><%= privateUrl %></a></p></td>
+      </tr>
+    </table>
 
-    <h2 style="color: #2e7d32; margin-top: 32px; margin-bottom: 16px; text-align: center;">Comments</h2>
-    <p><strong>Comments:</strong> <%= eventComments %></p>
-
-    <h2 style="color: #2e7d32; margin-top: 32px; margin-bottom: 16px; text-align: center;">Event URLs</h2>
-    <div style="display: flex; flex-direction: column; gap: 12px; text-align: center;">
-      <p><strong>Public URL:</strong> <a href="<%= publicUrl %>" style="color: #28a745; text-decoration: none; font-weight: 500;">View Event</a></p>
-      <p><strong>Private URL:</strong> <a href="<%= privateUrl %>" style="color: #28a745; text-decoration: none; font-weight: 500;">Access Private</a></p>
-    </div>
-
+    <h2 style="color: #27AE60;">Comments</h2>
+    <div style="background-color: #f9f9f9; border-radius: 4px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); white-space: pre-wrap;"><%= eventComments %></div>
   </div>
 
   <!-- Footer -->
-  <div style="background-color: #28a745; color: white; text-align: center; padding: 18px; font-size: 0.95rem; font-weight: 500;">
-    <p style="margin: 0;">Thank you for creating the event!</p>
+  <div style="background-color: #1c8046; text-align: center; padding: 15px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);">
+    <p style="margin: 0; color: white;">Thank you for creating the event!</p>
   </div>
 
 </body>
