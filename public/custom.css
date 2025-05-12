@@ -6,6 +6,7 @@
 }
 #map {
   min-height: 300px;
-  min-width: 300px;
+  min-width: 200px;
   margin-top: 1rem;
+  z-index: 0;
 }
