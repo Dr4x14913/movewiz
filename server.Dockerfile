@@ -7,5 +7,6 @@ RUN npm install
 
 COPY server.js /app/server.js
 COPY public/ /app/public
+COPY mail_templates/ /app/mail_templates
 
 ENTRYPOINT ["node", "server.js"]
