@@ -35,6 +35,42 @@
       </footer>
     </div>
   </div>
+  <!-- Help Modal -->
+  <div class="modal" id="helpModal" style="z-index: 1000;">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Help</p>
+      </header>
+      <section class="modal-card-body">
+        <div class="content">
+          <p><strong>How to register for the event:</strong></p>
+          <ul>
+            <li>Fill in the form with your first name, last name, email, etc.</li>
+            <li>All fields are required except <i>Phone number</i> and <i>Comments</i>.</li>
+            <li>Click <i>"Register"</i> or press <i>Enter</i> to submit.</li>
+            <li>If you dont want your email to be public, check <i>Hide my email</i>. The other participants will still be able to contact you through the website.</li>
+            <li>The Notify me feature allows you to choose whether you want to receive an email each time someone joins the event or not.</li>
+          </ul>
+
+          <p><strong>Choosing a departure address:</strong></p>
+          <ul>
+            <li>Click on the map to select an address.</li>
+            <li>Or type an address and click the suggestions, it will place the ping on the map for you.</li>
+          </ul>
+
+          <p><strong>Notes:</strong></p>
+          <ul>
+            <li>Click on any row in the table to zoom to that participant's location on the map.</li>
+            <li>Click on a marker to see the participant's details.</li>
+          </ul>
+        </div>
+      </section>
+      <footer class="modal-card-foot">
+        <button class="modal-card-footer-item" onclick="closeHelpModal()">Close</button>
+      </footer>
+    </div>
+  </div>
 
   <section class="section">
     <!-- Theme Toggle Button -->
@@ -104,11 +140,11 @@
       </div>
       <!-- Registration Section -->
       <div class="box">
-        <h2 class="title is-5">Register for Event</h2>
+        <h2 class="title is-5">Register for Event <span class="question-mark" onclick="openHelpModal()"><i class="fas fa-question-circle"></i></span></h2>
         <form id="registrationForm">
           <div class="columns">
             <div class="column is-6">
-              <label class="label">First Name</label>
+              <label class="label">First Name </label>
               <input class="input" type="text" id="firstName" required>
             </div>
             <div class="column is-6">
@@ -329,8 +365,8 @@
                 const m = L.marker([participant.latitude, participant.longitude], {icon: yellowIcon}).addTo(map);
                 m.bindPopup(`
                   <b>${participant.firstName} ${participant.lastName}</b><br>
-                  ${participant.showEmail ? participant.email : 'Email Hidden'}<br>
-                  <p>${participant.comments ? participant.comments : '-'}</p>`
+                  ${participant.showEmail ? participant.email : 'Email Hidden'}
+                  <p style="white-space: pre-wrap;">${participant.comments ? participant.comments : '-'}</p>`
                 );
                 row.addEventListener('click', () => {
                     map.setView([participant.latitude, participant.longitude], 13);
@@ -347,6 +383,15 @@
         .catch(error => {
           showErrorMessage(["Error fetching participants. Check your network.", error.message]);
         });
+    }
+
+     // Help Modal Functions
+    function openHelpModal() {
+      document.getElementById('helpModal').classList.add('is-active');
+    }
+
+    function closeHelpModal() {
+      document.getElementById('helpModal').classList.remove('is-active');
     }
   </script>
 </body>
