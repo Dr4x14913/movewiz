@@ -1,105 +1,172 @@
-# Movwiz - Event Booking App
+# Movewiz - Event Management System
 
-A simple web application for creating events with address autocomplete, map integration, and MySQL storage. Perfect for beta testing or event management needs.
+A web-based event management application that allows users to create events, register participants, and send notifications. Built with Node.js, Express, and MySQL, with a focus on user-friendly interfaces and real-time updates.
+
+## Overview
+Movewiz is designed to streamline event coordination by providing a centralized platform for:
+- Creating and managing events with detailed information
+- Registering participants with customizable options
+- Sending automated notifications to event owners and participants
+- Integrating maps for location-based event details
+
+The application features a responsive web interface with support for event editing and participant management witout any account or login required.
+
+## Tech Stack
+- **Backend**: Node.js, Express.js, MySQL
+- **Database**: MariaDB (with Docker container)
+- **Frontend**: HTML, CSS (Bulma), JavaScript (Leaflet for maps)
+- **Utilities**: EJS for templating, Nodemailer for email notifications
+- **Containerization**: Docker (with Docker Compose)
+
+## Setup Instructions
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Dr4x14913/movewiz.git
+   cd movewiz
+   ```
+
+2. **Create environment file**
+   ```bash
+   # Database Configuration
+   DB_HOST=db
+   DB_PORT=3306
+   DB_USER=user
+   DB_PASS=mypswd
+   DB_NAME=my_db
+
+   # SMTP Configuration
+   SMTP_HOST=smtp.example.com
+   SMTP_PORT=587
+   SMTP_SECURE=true
+   SMTP_TLS=true
+   SMTP_USER=smtpuser@domain.com
+   SMTP_PASS=smtppassword
+   SMTP_FROM=no-reply@yourdomain.com
+   ```
+   Update `stack.env` with your database credentials and SMTP settings.
+
+    | Variable | Description |
+    |---------|-------------|
+    | `DB_HOST` | Database host (e.g., `db` for Docker) |
+    | `DB_PORT` | Database port (e.g., `3306`) |
+    | `DB_USER` | Database username |
+    | `DB_PASS` | Database password |
+    | `DB_NAME` | Database name |
+    | `SMTP_HOST` | SMTP server host (e.g., `smtp.example.com`) |
+    | `SMTP_PORT` | SMTP server port (e.g., `587`) |
+    | `SMTP_SECURE` | Whether to use secure connection (`true`/`false`) |
+    | `SMTP_TLS` | Whether to use TLS (`true`/`false`) |
+    | `SMTP_USER` | SMTP username |
+    | `SMTP_PASS` | SMTP password |
+    | `SMTP_FROM` | Email address for sending notifications |
+
+3. **Build and run**
+  * With docker:
+    ```bash
+    docker-compose up --build
+    ```
+  * Without docker:
+    - Setup the database:
+      ```sql
+      CREATE DATABASE my_db;
+
+      USE my_db;
+
+      CREATE TABLE events (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        firstName VARCHAR(255),
+        lastName VARCHAR(255),
+        email VARCHAR(255),
+        eventName VARCHAR(255),
+        datePicker VARCHAR(32),
+        address TEXT,
+        latitude DECIMAL(10,8),
+        longitude DECIMAL(10,8),
+        readToken VARCHAR(255),
+        editToken VARCHAR(255),
+        comments TEXT
+      );
+
+      CREATE TABLE participants (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        firstName VARCHAR(255),
+        lastName VARCHAR(255),
+        email VARCHAR(255),
+        showEmail BOOLEAN,
+        registrationDate VARCHAR(32),
+        mode VARCHAR(255),
+        latitude DECIMAL(10,8),
+        longitude DECIMAL(10,8),
+        eventId INT,
+        comments TEXT,
+        phoneNumber VARCHAR(20),
+        notifyMe BOOLEAN,
+        FOREIGN KEY (eventId) REFERENCES events(id)
+      );
+      ```
+    - Install Dependencies:
+      ```bash
+      npm install
+      ```
+    - Start the app:
+      ```bash
+      node --env-file=stack.env server.js
+      ```
+
+4. **Access the app**
+   - Open http://localhost:3033 in your browser
+   - Use the event creation form to start managing events
 
 ---
 
-## 🎯 Description
+## API Routes Guide for Movewiz
 
-**Movwiz** is a beta version of an event booking application that allows users to input event details, such as name, date, and address. It features:
+This document provides a detailed overview of the API routes implemented in the Movewiz project. These routes are used to interact with the backend server and manage event data, participants, and notifications.
 
-- Address autocomplete using the [Photon API](https://photon.komoot.io)
-- Interactive map integration with Leaflet
-- Unique URL generation for each event
-- MySQL database storage for event data
+### 1. **`/api/createEvent` (POST)**
 
-## 🛠 Technologies Used
-
-- **Backend**: Node.js with Express
-- **Database**: MySQL
-- **Frontend**: HTML, CSS (Bulma), JavaScript (Leaflet)
-- **Dependencies**: 
-  - `express` for API routing
-  - `mysql2` for MySQL database connection
-  - `uuid` for generating unique tokens
-
-## 🛠 Setup Instructions
-
-1. **Install Dependencies**:
-   ```bash
-   npm install
-   ```
-
-2. **Create `.env` File**:
-   ```env
-   DB_HOST=your_database_host
-   DB_USER=your_database_user
-   DB_PASS=your_database_password
-   DB_NAME=your_database_name
-   ```
-
-3. **Create MySQL Database and Table**:
-   ```sql
-   CREATE DATABASE my_db;
-
-   USE my_db;
-
-   CREATE TABLE events (
-     id INT AUTO_INCREMENT PRIMARY KEY,
-     firstName VARCHAR(255),
-     lastName VARCHAR(255),
-     email VARCHAR(255),
-     eventName VARCHAR(255),
-     datePicker DATE,
-     address VARCHAR(255),
-     latitude DECIMAL(10,8),
-     longitude DECIMAL(10,8),
-     token VARCHAR(36)
-   );
-   ```
-
-4. **Start the Server**:
-   ```bash
-   node server.js
-   ```
-   Or
-   ```bash
-   node --env-file=.env server.js
-   ```
-
-## API Routes
-
-#### 1. `POST /api/createEvent`
-**Description**: Creates a new event and returns a unique URL for it.  
-**Purpose**: Stores event details in the MySQL database and generates a unique token for the event.  
+**Purpose**: Create a new event with the provided details.
 
 **Request Body**:
 ```json
 {
   "firstName": "John",
   "lastName": "Doe",
-  "email": "john@example.com",
-  "eventName": "Birthday Party",
+  "email": "john.doe@example.com",
+  "eventName": "City Tour",
   "datePicker": "2023-10-15",
-  "address": "123 Main St",
-  "latitude": 40.7128,
-  "longitude": -74.0060
+  "address": "123 Main Street",
+  "latitude": "40.7128",
+  "longitude": "-74.0060",
+  "comments": "Join us for a fun day in the city!"
 }
 ```
 
 **Response**:
 ```json
 {
-  "uniqueUrl": "https://example.com/event/5f96a677-1b4d-4a47-9c6c-1a5d6e7f890a"
+  "readUrl": "http://localhost:3033/event?token=abc123",
+  "writeUrl": "http://localhost:3033/edit?token=def456"
 }
 ```
 
-#### 2. `GET /api/getEvent`
-**Description**: Retrieves event details using a unique token.  
-**Purpose**: Fetches event data from the MySQL database based on the provided token.  
+**Notes**:
+- Generates a unique read and edit token for the event.
+- Sends an email notification to the event owner with the event details and public/private URLs.
+- Stores the event in the database.
+
+### 2. **`/api/getEvent` (GET)**
+
+**Purpose**: Retrieve event details using a token.
 
 **Query Parameters**:
-- `token`: A unique identifier for the event (required).
+- `token`: The readToken or editToken of the event.
+
+**Example Request**:
+```
+GET /api/getEvent?token=abc123
+```
 
 **Response**:
 ```json
@@ -108,34 +175,144 @@ A simple web application for creating events with address autocomplete, map inte
     "id": 1,
     "firstName": "John",
     "lastName": "Doe",
-    "email": "john@example.com",
-    "eventName": "Birthday Party",
+    "email": "john.doe@example.com",
+    "eventName": "City Tour",
     "datePicker": "2023-10-15",
-    "address": "123 Main St",
-    "latitude": 40.7128,
-    "longitude": -74.0060,
-    "token": "5f96a677-1b4d-4a47-9c6c-1a5d6e7f890a"
+    "address": "123 Main Street",
+    "latitude": "40.7128",
+    "longitude": "-74.0060",
+    "readToken": "abc123",
+    "editToken": "def456",
+    "comments": "Join us for a fun day in the city!"
   }
 }
 ```
 
----
-
-## 📝 Notes
-- These endpoints are part of the backend and are used to store and retrieve event data.
-- The `/api/createEvent` endpoint generates a unique token using UUID v4 and stores it in the database.
-- The `/api/getEvent` endpoint uses the token to fetch the event details from the database.
+**Notes**:
+- Returns the event details if the token is valid.
+- If the token is invalid or the event doesn't exist, returns a 404 error.
 
 
-## 📝 Notes
+### 3. **`/api/editEvent` (POST)**
 
-- The app uses **UUID v4** to generate unique tokens for each event.
-- The **MySQL connection** is configured using environment variables from `.env`.
-- The **Photon API** is used for address autocomplete and reverse geocoding.
-- The **Leaflet map** is used for interactive address selection.
-- The app is a **beta version**, so some features may require further refinement.
+**Purpose**: Update an event using the edit token.
 
-## 📚 License
+**Request Body**:
+```json
+{
+  "editToken": "def456",
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "eventName": "City Tour 2023",
+  "datePicker": "2023-10-16",
+  "address": "456 Oak Avenue",
+  "latitude": "40.7129",
+  "longitude": "-74.0061",
+  "comments": "Updated event details for 2023!"
+}
+```
 
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+**Response**:
+```json
+{
+  "event": {
+    "id": 1,
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "eventName": "City Tour 2023",
+    "datePicker": "2023-10-16",
+    "address": "456 Oak Avenue",
+    "latitude": "40.7129",
+    "longitude": "-74.0061",
+    "readToken": "abc123",
+    "editToken": "def456",
+    "comments": "Updated event details for 2023!"
+  }
+}
+```
 
+**Notes**:
+- Only the `editToken` is required in the request body.
+- Updates the event details in the database.
+- Returns the updated event data.
+
+
+### 4. **`/api/registerParticipant` (POST)**
+
+**Purpose**: Register a participant for an event using the read token.
+
+**Request Body**:
+```json
+{
+  "firstName": "Alice",
+  "lastName": "Smith",
+  "email": "alice.smith@example.com",
+  "mode": "passenger",
+  "showEmail": true,
+  "token": "abc123",
+  "registrationDate": "2023-10-10",
+  "latitude": "40.7128",
+  "longitude": "-74.0060",
+  "comments": "I'm excited to join!",
+  "phoneNumber": "123-456-7890",
+  "notifyMe": true
+}
+```
+
+**Response**:
+```json
+{
+  "message": "Participant registered successfully"
+}
+```
+
+**Notes**:
+- Uses the `readToken` from the query to find the event.
+- Sends an email notification to the event owner and all participants.
+- Stores the participant in the database.
+
+
+### 5. **`/api/getParticipants` (GET)**
+
+**Purpose**: Retrieve all participants for an event using the read token.
+
+**Query Parameters**:
+- `token`: The readToken of the event.
+
+**Example Request**:
+```
+GET /api/getParticipants?token=abc123
+```
+
+**Response**:
+```json
+[
+  {
+    "id": 1,
+    "firstName": "Alice",
+    "lastName": "Smith",
+    "email": "alice.smith@example.com",
+    "registrationDate": "2023-10-10",
+    "mode": "passenger",
+    "showEmail": true,
+    "eventId": 1,
+    "latitude": "40.7128",
+    "longitude": "-74.0060",
+    "comments": "I'm excited to join!",
+    "phoneNumber": "123-456-7890",
+    "notifyMe": true
+  }
+]
+```
+
+**Notes**:
+- Returns all participants for the event if the token is valid.
+- If the token is invalid or the event doesn't exist, returns a 404 error.
+
+
+## License
+This project is open-source and released under the MIT License.
+
+For questions or feedback, feel free to open an issue on the repository.
