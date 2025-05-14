@@ -4,9 +4,31 @@ const mysql = require('mysql2');
 const { v4: uuidv4 } = require('uuid');
 const nodemailer = require('nodemailer');
 const ejs = require('ejs');
+const session = require('express-session');
+const rateLimit = require('express-rate-limit');
+const svgCaptcha = require('svg-captcha');
 
 const app = express();
 const PORT = 3000;
+/* ------------------------------------------------------------------------------------------------------------------ */
+// Session configuration
+/* ------------------------------------------------------------------------------------------------------------------ */
+app.use(session({
+  secret: 'your-secret-key',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
+}));
+/* ------------------------------------------------------------------------------------------------------------------ */
+// Rate limiting configuration
+/* ------------------------------------------------------------------------------------------------------------------ */
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 3, // limit to 100 requests per window
+  message: 'Too many requests, please try again later.',
+  statusCode: 429
+});
+
 /* ------------------------------------------------------------------------------------------------------------------ */
 // MySQL connection
 /* ------------------------------------------------------------------------------------------------------------------ */
@@ -18,7 +40,7 @@ const db = mysql.createConnection({
   database: process.env.DB_NAME
 });
 /* ------------------------------------------------------------------------------------------------------------------ */
-// SMTP configuration
+// SMTP configuration and mailing functions
 /* ------------------------------------------------------------------------------------------------------------------ */
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -217,12 +239,13 @@ app.post('/api/editEvent', (req, res) => {
 app.post('/api/registerParticipant', (req, res) => {
   const { firstName, lastName, email, mode, showEmail, token, registrationDate, latitude, longitude, comments, phoneNumber, notifyMe } = req.body;
   const query = `
-  INSERT INTO participants (firstName, lastName, email, registrationDate, mode, showEmail, eventId, latitude, longitude, comments, phoneNumber, notifyMe)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO participants (firstName, lastName, email, registrationDate, mode, showEmail, eventId, latitude, longitude, comments, phoneNumber, notifyMe, contactToken)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
   let eventId;
   let ownerEmail;
   let eventName;
+  const contactToken = uuidv4();
 
   db.query(`SELECT id, email, eventName FROM events WHERE readToken='${token}'`, (error, results) => {
     if (error) {
@@ -236,7 +259,7 @@ app.post('/api/registerParticipant', (req, res) => {
       eventId = results[0].id;
       ownerEmail = results[0].email
       eventName = results[0].eventName
-      db.query(query, [firstName, lastName, email, registrationDate, mode, showEmail, eventId, latitude, longitude, comments, phoneNumber, notifyMe], (error, results) => {
+      db.query(query, [firstName, lastName, email, registrationDate, mode, showEmail, eventId, latitude, longitude, comments, phoneNumber, notifyMe, contactToken], (error, results) => {
         if (error) {
           console.log('Failed to register participant' + error);
           return res.status(502).json({ error: 'Failed to register participant' });
@@ -272,6 +295,58 @@ app.get('/api/getParticipants', (req, res) => {
       res.json(participants);
     });
   });
+});
+
+app.post('/api/contactParticipant', limiter, (req, res) => {
+  const contactToken = req.body.contactToken;
+  const answer = req.body.answer;
+  const senderEmail = req.body.senderEmail;
+  const message = req.body.message;
+  const eventName = req.body.eventName;
+
+  if (req.session.captcha !== answer) {
+    console.log('Invalid captcha');
+    return res.status(401).json({ error: 'Invalid captcha' });
+  }
+
+  db.query('SELECT * FROM participants WHERE contactToken = ?', [contactToken], (error, results) => {
+    if (error) {
+      console.log('Database error');
+      return res.status(500).json({ error: 'Database error' });
+    }
+    if (results.length === 0) {
+      console.log('Participant not found');
+      return res.status(404).json({ error: 'Participant not found' });
+    }
+    const participant = results[0];
+    const participantEmail = participant.email;
+
+    // Send email to participant
+    ejs.renderFile(path.join(__dirname, 'mail_templates', 'contact.ejs'), { senderEmail, message }, (err, html) => {
+      if (err)
+        console.error(err);
+      else 
+        sendEmail(participantEmail, `[Movewiz] Contact from event ${eventName}`, html);
+    });
+    delete req.session.captcha;
+
+    res.json({ success: true });
+  });
+});
+
+app.get('/generate-captcha', (req, res) => {
+  const captcha = svgCaptcha.create({
+    size: 5, // Number of characters
+    ignoreChars: '0Oo1i', // Characters to avoid
+    noise: 3, // Number of noise lines
+    color: true, // Colorful characters
+    width: 150, // Width of the captcha
+    height: 50, // Height of the captcha
+    fontSize: 40 // Font size
+  });
+  req.session.captcha = captcha.text;
+  res.setHeader('Content-Type', 'image/svg+xml');
+  res.send(captcha.data);
 });
 
 // Start the server

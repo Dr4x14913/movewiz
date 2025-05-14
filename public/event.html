@@ -31,7 +31,7 @@
         </div>
       </section>
       <footer class="modal-card-foot">
-        <button class="modal-card-footer-item" onclick="closeModal()">Close</button>
+        <button class="modal-card-footer-item" onclick="closeModal('errorModal')">Close</button>
       </footer>
     </div>
   </div>
@@ -67,7 +67,48 @@
         </div>
       </section>
       <footer class="modal-card-foot">
-        <button class="modal-card-footer-item" onclick="closeHelpModal()">Close</button>
+        <button class="modal-card-footer-item" onclick="closeModal('helpModal')">Close</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Contact Modal -->
+  <div class="modal" id="contactModal" style="z-index: 1000;">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      <header class="modal-card-head">
+        <p class="modal-card-title">Contact Participant</p>
+      </header>
+      <section class="modal-card-body">
+        <div class="content">
+          <form id="contactForm">
+            <div class="field">
+              <label class="label">Sender Email</label>
+              <div class="control">
+                <input class="input" type="email" id="senderEmail" required>
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">Message</label>
+              <div class="control">
+                <textarea class="textarea" id="message" required></textarea>
+              </div>
+            </div>
+            <div class="field">
+              <label class="label">Captcha</label>
+              <img id="captchaImage" src="" alt=" " style="width: 200px;">
+              <div class="control">
+                <input class="input" id="captchaAnswer" required>
+              </div>
+            </div>
+            <div class="field">
+              <button class="button is-primary" type="submit">Send</button>
+            </div>
+          </form>
+        </div>
+      </section>
+      <footer class="modal-card-foot">
+        <button class="modal-card-footer-item" onclick="closeModal('contactModal')">Close</button>
       </footer>
     </div>
   </div>
@@ -140,7 +181,7 @@
       </div>
       <!-- Registration Section -->
       <div class="box">
-        <h2 class="title is-5">Register for Event <span class="question-mark" onclick="openHelpModal()"><i class="fas fa-question-circle"></i></span></h2>
+        <h2 class="title is-5">Register for Event <span class="question-mark" onclick="openModal('helpModal')"><i class="fas fa-question-circle"></i></span></h2>
         <form id="registrationForm">
           <div class="columns">
             <div class="column is-6">
@@ -242,6 +283,7 @@
     const token = urlParams.get('token');
     var eventLat;
     var eventLng;
+    var eventName;
 
     document.addEventListener("DOMContentLoaded", () => {
       if (!token) {
@@ -267,6 +309,7 @@
           document.getElementById('comments').value = event.comments;
           eventLat = event.latitude;
           eventLng = event.longitude;
+          eventName = event.eventName;
           initMap(eventLat, eventLng);
           fetchParticipantsAndResizeMap();
         })
@@ -354,7 +397,7 @@
               row.innerHTML = `
                 <td>${participant.firstName}</td>
                 <td>${participant.lastName}</td>
-                <td>${participant.showEmail ? participant.email : '<i class="fa-solid fa-paper-plane"></i>'}</td>
+                <td>${participant.showEmail ? participant.email : `<button onclick="openContactModal('${participant.contactToken}')"><i class="fa-solid fa-paper-plane"></i></button>`}</td>
                 <td>${participant.mode}</td>
                 <td>${formatedDate}</td>
                 <td>${participant.phoneNumber}</td>
@@ -385,14 +428,54 @@
         });
     }
 
-     // Help Modal Functions
-    function openHelpModal() {
-      document.getElementById('helpModal').classList.add('is-active');
+    function openContactModal(contactToken) {
+      openModal('contactModal');
+      window.contactToken = contactToken;
+
+      fetch('/generate-captcha')
+        .then(res => res.text())
+        .then(captcha => {
+          document.getElementById('captchaImage').innerHTML = captcha;
+        });
     }
 
-    function closeHelpModal() {
-      document.getElementById('helpModal').classList.remove('is-active');
-    }
+    // Contact Modal Functions
+    document.getElementById('contactForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const answer = document.getElementById('captchaAnswer').value;
+      const senderEmail = document.getElementById('senderEmail').value;
+      const message = document.getElementById('message').value;
+
+      fetch('/api/contactParticipant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contactToken: window.contactToken,
+          eventName,
+          answer,
+          senderEmail,
+          message
+        })
+      })
+      .then(res => {
+        if (res.ok) {
+          alert('Message sent!');
+          closeModal('contactModal');
+          document.getElementById('contactForm').reset();
+        } else if (res.status == 401) {
+          res.json().then(e => {
+            alert(e.error);
+          })
+        } else {
+          alert(res.statusText);
+        }
+      })
+      .catch(err => {
+        showErrorMessage(["Error sending message. Check your network.", err.message]);
+      });
+    });
+
   </script>
 </body>
 </html>

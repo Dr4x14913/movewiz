@@ -225,7 +225,6 @@ function submitEventForm(update=false, editToken="") {
 }
 
 function showErrorMessage(message) {
-    const modal = document.getElementById('errorModal');
     const modalMessage = document.getElementById('modalMessage');
     modalMessage.innerHTML = '';
     message.forEach(error => {
@@ -233,10 +232,12 @@ function showErrorMessage(message) {
         li.textContent = error;
         modalMessage.appendChild(li);
     });
-    modal.classList.add('is-active');
+    openModal('errorModal');
 }
 
-function closeModal() {
-    const modal = document.getElementById('errorModal');
-    modal.classList.remove('is-active');
+function closeModal(_id) {
+    document.getElementById(_id).classList.remove('is-active');
+}
+function openModal(_id) {
+    document.getElementById(_id).classList.add('is-active');
 }
