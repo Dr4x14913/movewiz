@@ -14,10 +14,10 @@ const PORT = 3000;
 // Session configuration
 /* ------------------------------------------------------------------------------------------------------------------ */
 app.use(session({
-  secret: 'your-secret-key',
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
-  cookie: { secure: false }
+  cookie: { secure: process.env.IS_SECURE == 'true' }
 }));
 /* ------------------------------------------------------------------------------------------------------------------ */
 // Rate limiting configuration
