@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Movewiz Beta</title>
+  <title>Movwiz Beta</title>
   <!-- Custom CSS -->
   <link rel="stylesheet" href="custom.css">
   <!-- Bulma CSS -->
@@ -15,6 +15,7 @@
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
+  <script src="translation.js"></script>
 </head>
 <body>
   <!-- Error Modal with Bulma -->
@@ -22,7 +23,8 @@
     <div class="modal-background"></div>
     <div class="modal-card">
       <header class="modal-card-head">
-        <p class="modal-card-title">Error <div class="delete" onclick="closeModal('errorModal')"></div></p>
+        <p class="modal-card-title" data-translate="modalError">Error</p>
+        <div class="delete" onclick="closeModal('errorModal')"></div>
       </header>
       <section class="modal-card-body">
         <div class="content">
@@ -39,7 +41,7 @@
       <div class="navbar-brand">
         <a class="navbar-item" href="#">Movwiz</a>
       </div>
-
+      <a class="navbar-item button is-primary" onclick="toggleLanguage()" data-translate="curLang">FR</a>
       <div class="navbar-end">
         <a class="navbar-item button is-primary" id="theme-toggle" onclick="toggleTheme()">
           <span class="icon">
@@ -51,42 +53,42 @@
     </nav>
 
     <div class="container">
-      <h1 class="title is-3">Movwiz beta</h1>
+      <h1 class="title is-3" data-translate="eventPageTitle">Movwiz beta</h1>
       <form id="eventForm">
         <!-- Form Section -->
         <div class="box">
-          <h2 class="title is-4">Enter Details</h2>
+          <h2 class="title is-4" data-translate="formTitle">Enter Details</h2>
 
           <div class="field">
-            <label class="label">First Name</label>
+            <label class="label" data-translate="firstName">First Name</label>
             <div class="control">
               <input class="input is-primary" type="text" id="firstName" placeholder="Enter first name" required/>
             </div>
           </div>
 
           <div class="field">
-            <label class="label">Last Name</label>
+            <label class="label" data-translate="lastName">Last Name</label>
             <div class="control">
               <input class="input is-primary" type="text" id="lastName" placeholder="Enter last name" required/>
             </div>
           </div>
 
           <div class="field">
-            <label class="label">Email</label>
+            <label class="label" data-translate="email">Email</label>
             <div class="control">
               <input class="input is-primary" type="email" id="email" placeholder="Enter email" required/>
             </div>
           </div>
 
           <div class="field">
-            <label class="label">Event Name</label>
+            <label class="label" data-translate="eventName">Event Name</label>
             <div class="control">
               <input class="input is-primary" type="text" id="eventName" placeholder="Enter event name" required/>
             </div>
           </div>
 
           <div class="field">
-            <label class="label">Comments</label>
+            <label class="label" data-translate="comments">Comments</label>
             <div class="control">
               <textarea class="textarea is-info" id="comments" placeholder="Comments that you want to add"></textarea>
             </div>
@@ -96,7 +98,7 @@
         <!-- Date picker -->
         <div class="box">
           <div class="field">
-            <label class="label">Calendar Picker</label>
+            <label class="label" data-translate="date">Calendar Picker</label>
             <div class="control">
               <input class="input is-primary" type="date" id="datePicker" required/>
             </div>
@@ -105,7 +107,7 @@
 
         <div class="box">
           <!-- Address Autocomplete Section -->
-          <h2 class="title is-4">Address Autocomplete</h2>
+          <h2 class="title is-4" data-translate="autocompleteHeader">Address Autocomplete</h2>
           <div class="field">
             <p class="control has-icons-left">
               <input class="input is-primary" type="text" id="addressInput" placeholder="Enter address..." required/>
@@ -117,12 +119,12 @@
           <div id="suggestions" class="notification is-light" style="max-height: 200px; overflow-y: auto; margin-top: 10px;"></div>
 
           <!-- Leaflet Map Section -->
-          <h2 class="title is-4">Select Address on Map</h2>
+          <h2 class="title is-4" data-translate="mapHeader">Select Address on Map</h2>
           <div id="map" class="map"></div>
         </div>
 
         <div class="box">
-          <button class="button is-primary my-2" type="submit">Submit</button>
+          <button class="button is-primary my-2" type="submit" data-translate="submit">Submit</button>
           <div id="result" class="notification is-info"></div>
         </div>
       </form>

@@ -15,6 +15,7 @@
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
+  <script src="translation.js"></script>
 </head>
 <body>
   <!-- Error Modal with Bulma -->
@@ -22,7 +23,7 @@
     <div class="modal-background"></div>
     <div class="modal-card">
       <header class="modal-card-head">
-        <p class="modal-card-title">Error</p>
+        <p class="modal-card-title" data-translate="modalError">Error</p>
       </header>
       <section class="modal-card-body">
         <div class="content">
@@ -40,29 +41,29 @@
     <div class="modal-background"></div>
     <div class="modal-card">
       <header class="modal-card-head">
-        <p class="modal-card-title">Help</p>
+        <p class="modal-card-title" data-translate="helpModalTitle">Help</p>
       </header>
       <section class="modal-card-body">
         <div class="content">
-          <p><strong>How to register for the event:</strong></p>
+          <p><strong><span data-translate="helpRegistrationInstructions">How to register for the event:</span></strong></p>
           <ul>
-            <li>Fill in the form with your first name, last name, email, etc.</li>
-            <li>All fields are required except <i>Phone number</i> and <i>Comments</i>.</li>
-            <li>Click <i>"Register"</i> or press <i>Enter</i> to submit.</li>
-            <li>If you dont want your email to be public, check <i>Hide my email</i>. The other participants will still be able to contact you through the website.</li>
-            <li>The Notify me feature allows you to choose whether you want to receive an email each time someone joins the event or not.</li>
+            <li><span data-translate="helpRegistrationInstructions1">Fill in the form with your first name, last name, email, etc.</span></li>
+            <li><span data-translate="helpRegistrationInstructions2">All fields are required except <i>Phone number</i> and <i>Comments</i>.</span></li>
+            <li><span data-translate="helpRegistrationInstructions3">Click <i>"Register"</i> or press <i>Enter</i> to submit.</span></li>
+            <li><span data-translate="helpRegistrationInstructions4">If you don't want your email to be public, check <i>Hide my email</i>. The other participants will still be able to contact you through the website.</span></li>
+            <li><span data-translate="helpRegistrationInstructions5">The Notify me feature allows you to choose whether you want to receive an email each time someone joins the event or not.</span></li>
           </ul>
 
-          <p><strong>Choosing a departure address:</strong></p>
+          <p><strong><span data-translate="helpChoosingAddress">Choosing a departure address:</span></strong></p>
           <ul>
-            <li>Click on the map to select an address.</li>
-            <li>Or type an address and click the suggestions, it will place the ping on the map for you.</li>
+            <li><span data-translate="helpChoosingAddress1">Click on the map to select an address.</span></li>
+            <li><span data-translate="helpChoosingAddress2">Or type an address and click the suggestions, it will place the ping on the map for you.</span></li>
           </ul>
 
-          <p><strong>Notes:</strong></p>
+          <p><strong><span data-translate="helpNotes">Notes:</span></strong></p>
           <ul>
-            <li>Click on any row in the table to zoom to that participant's location on the map.</li>
-            <li>Click on a marker to see the participant's details.</li>
+            <li><span data-translate="helpNotes1">Click on any row in the table to zoom to that participant's location on the map.</span></li>
+            <li><span data-translate="helpNotes2">Click on a marker to see the participant's details.</span></li>
           </ul>
         </div>
       </section>
@@ -77,32 +78,32 @@
     <div class="modal-background"></div>
     <div class="modal-card">
       <header class="modal-card-head">
-        <p class="modal-card-title">Contact Participant</p>
+        <p class="modal-card-title" data-translate="contactModalTitle">Contact Participant</p>
       </header>
       <section class="modal-card-body">
         <div class="content">
           <form id="contactForm">
             <div class="field">
-              <label class="label">Sender Email</label>
+              <label class="label" data-translate="contactFormSenderEmail">Sender Email</label>
               <div class="control">
                 <input class="input" type="email" id="senderEmail" required>
               </div>
             </div>
             <div class="field">
-              <label class="label">Message</label>
+              <label class="label" data-translate="contactFormMessage">Message</label>
               <div class="control">
                 <textarea class="textarea" id="message" required></textarea>
               </div>
             </div>
             <div class="field">
-              <label class="label">Captcha</label>
+              <label class="label" data-translate="contactFormCaptcha">Captcha</label>
               <img id="captchaImage" src="" alt=" " style="width: 200px;">
               <div class="control">
                 <input class="input" id="captchaAnswer" required>
               </div>
             </div>
             <div class="field">
-              <button class="button is-primary" type="submit">Send</button>
+              <button class="button is-primary" type="submit" data-translate="contactFormSend">Send</button>
             </div>
           </form>
         </div>
@@ -120,7 +121,9 @@
         <a class="navbar-item" href="#">Movwiz</a>
       </div>
 
-      <div class="navbar-item has-text-weight-bold">Event Details</div>
+      <a class="navbar-item button is-primary" onclick="toggleLanguage()" data-translate="curLang">FR</a>
+
+      <div class="navbar-item has-text-weight-bold" data-translate="eventPageTitle">Event Details - Movwiz</div>
 
       <div class="navbar-end">
         <a class="navbar-item button is-primary" id="theme-toggle" onclick="toggleTheme()">
@@ -134,41 +137,41 @@
     <div style="height: 100px;"></div>
 
     <div class="container is-flex is-justify-content-center is-flex-direction-column" style="max-width: 800px;">
-      <h1 class="title is-3"></h1>
+      <h1 class="title is-3" data-translate="eventPageTitle">Event Details - Movwiz</h1>
       <div class="box">
-        <h2 class="title is-5">Event Information</h2>
+        <h2 class="title is-5" data-translate="eventPageTitle">Event Information</h2>
         <div class="columns">
           <div class="column is-6">
-            <p class="title is-6">Event Name</p>
+            <p class="title is-6" data-translate="eventName">Event Name</p>
             <p id="eventNameDisplay"></p>
           </div>
           <div class="column is-6">
-            <p class="title is-6">First Name</p>
+            <p class="title is-6" data-translate="firstName">First Name</p>
             <p id="firstNameDisplay"></p>
           </div>
         </div>
         <div class="columns">
           <div class="column is-6">
-            <p class="title is-6">Last Name</p>
+            <p class="title is-6" data-translate="lastName">Last Name</p>
             <p id="lastNameDisplay"></p>
           </div>
           <div class="column is-6">
-            <p class="title is-6">Email</p>
+            <p class="title is-6" data-translate="email">Email</p>
             <p id="emailDisplay"></p>
           </div>
         </div>
         <div class="columns">
           <div class="column is-6">
-            <p class="title is-6">Date Picker</p>
+            <p class="title is-6" data-translate="date">Date Picker</p>
             <input class="input" disabled type="date" id="datePickerDisplay"></input>
           </div>
           <div class="column is-6">
-            <p class="title is-6">Address</p>
+            <p class="title is-6" data-translate="address">Address</p>
             <p id="addressDisplay"></p>
           </div>
         </div>
         <div class="field">
-          <label class="label">Comments</label>
+          <label class="label" data-translate="comments">Comments</label>
           <div class="control">
             <textarea class="textarea is-info" id="comments" placeholder="Comments that you want to add" disabled></textarea>
           </div>
@@ -176,31 +179,31 @@
       </div>
       <!-- Map Section -->
       <div class="box">
-        <h2 class="title is-5">Map</h2>
+        <h2 class="title is-5" data-translate="editMapTitle">Map</h2>
         <div id="map"></div>
       </div>
       <!-- Registration Section -->
       <div class="box">
-        <h2 class="title is-5">Register for Event <span class="question-mark" onclick="openModal('helpModal')"><i class="fas fa-question-circle"></i></span></h2>
+        <h2 class="title is-5" data-translate="registrationTitle">Register for Event <span class="question-mark" onclick="openModal('helpModal')"><i class="fas fa-question-circle"></i></span></h2>
         <form id="registrationForm">
           <div class="columns">
             <div class="column is-6">
-              <label class="label">First Name </label>
+              <label class="label" data-translate="firstName">First Name </label>
               <input class="input" type="text" id="firstName" required>
             </div>
             <div class="column is-6">
-              <label class="label">Last Name</label>
+              <label class="label" data-translate="lastName">Last Name</label>
               <input class="input" type="text" id="lastName" required>
             </div>
           </div>
           <div class="columns">
             <div class="column is-6">
-              <label class="label">Email</label>
+              <label class="label" data-translate="email">Email</label>
               <input class="input" type="email" id="email" required>
             </div>
             <div class="column is-6">
               <div class="field">
-                <label class="label">I am:</label>
+                <label class="label" data-translate="mode">I am:</label>
                 <div class="control">
                   <div class="select">
                     <select id="mode">
@@ -229,7 +232,7 @@
           </div>
           <div class="columns">
             <div class="column is-6">
-              <label class="label">Address</label>
+              <label class="label" data-translate="address">Address</label>
               <input class="input" type="text" id="addressInput" oninput="auto_complete_addr()">
             </div>
             <div class="column is-6">
@@ -238,26 +241,26 @@
           </div>
           <div class="columns">
             <div class="column is-6">
-              <label class="label">Phone number</label>
+              <label class="label" data-translate="phoneNumber">Phone number</label>
               <input class="input is-info" type="text" id="phoneNumber"/>
             </div>
           </div>
           <div class="field">
-            <label class="label">Comments</label>
+            <label class="label" data-translate="comments">Comments</label>
             <div class="control">
               <textarea class="textarea is-info" id="registerComments" placeholder="Comments that you want to add"></textarea>
             </div>
           </div>
           <div class="columns">
             <div class="column is-6">
-              <button class="button is-primary" type="submit">Register</button>
+              <button class="button is-primary" type="submit" data-translate="registerButton">Register</button>
             </div>
           </div>
         </form>
       </div>
       <!-- Participants Section -->
       <div class="box" style="overflow: auto;">
-        <h2 class="title is-5">Participants</h2>
+        <h2 class="title is-5" data-translate="participantsTableTitle">Participants</h2>
         <table class="table is-fullwidth is-hoverable">
           <thead>
             <tr>

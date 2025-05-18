@@ -11,10 +11,11 @@
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <!-- icons -->
-  <script defer src="https://use.fontawesome.com/releases/v5.15.4/js/all.js"></script>
+  <script defer src="https://use.fontawesome.com/releases/v6.7.2/js/all.js"></script>
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="script.js"></script>
+  <script src="translation.js"></script>
 </head>
 <body>
   <!-- Error Modal with Bulma -->
@@ -43,7 +44,8 @@
       <div class="navbar-brand">
         <a class="navbar-item" href="#">Movwiz</a>
       </div>
-      <div class="navbar-item has-text-weight-bold">Edit Event Details</div>
+      <a class="navbar-item button is-primary" onclick="toggleLanguage()" data-translate="curLang">FR</a>
+      <div class="navbar-item has-text-weight-bold" data-translate="editPageTitle">Edit Event Details</div>
 
       <div class="navbar-end">
         <a class="navbar-item button is-primary" id="theme-toggle" onclick="toggleTheme()">
@@ -57,48 +59,48 @@
 
     <div class="container is-flex is-justify-content-center is-flex-direction-column" style="max-width: 800px;">
       <div class="box">
-        <h2 class="title is-5">Event Information</h2>
+        <h2 class="title is-5" data-translate="editPageTitle">Edit Event - Movwiz</h2>
         <form id="updateForm">
           <div class="columns">
             <div class="column is-6">
-              <p class="title is-6">Event Name</p>
-              <input class="input" type="text" id="eventName"></input>
+              <p class="title is-6" data-translate="editFormEventName">Event Name</p>
+              <input class="input" type="text" id="eventName" data-translate="editFormEventName">
             </div>
             <div class="column is-6">
-              <p class="title is-6">First Name</p>
-              <input class="input" type="text" id="firstName"></input>
-            </div>
-          </div>
-          <div class="columns">
-            <div class="column is-6">
-              <p class="title is-6">Last Name</p>
-              <input class="input" type="text" id="lastName"></input>
-            </div>
-            <div class="column is-6">
-              <p class="title is-6">Email</p>
-              <input class="input" type="text" id="email"></input>
+              <p class="title is-6" data-translate="editFormFirstName">First Name</p>
+              <input class="input" type="text" id="firstName" data-translate="editFormFirstName">
             </div>
           </div>
           <div class="columns">
             <div class="column is-6">
-              <p class="title is-6">Date Picker</p>
-              <input class="input" type="date" id="datePicker"></input>
+              <p class="title is-6" data-translate="editFormLastName">Last Name</p>
+              <input class="input" type="text" id="lastName" data-translate="editFormLastName">
             </div>
             <div class="column is-6">
-              <p class="title is-6">Address</p>
-              <input class="input" type="text" id="addressInput" oninput="auto_complete_addr()"></input>
+              <p class="title is-6" data-translate="editFormEmail">Email</p>
+              <input class="input" type="text" id="email" data-translate="editFormEmail">
+            </div>
+          </div>
+          <div class="columns">
+            <div class="column is-6">
+              <p class="title is-6" data-translate="editFormDatePicker">Date Picker</p>
+              <input class="input" type="date" id="datePicker" data-translate="editFormDatePicker">
+            </div>
+            <div class="column is-6">
+              <p class="title is-6" data-translate="editFormAddress">Address</p>
+              <input class="input" type="text" id="addressInput" oninput="auto_complete_addr()" data-translate="editFormAddress">
               <div id="suggestions" class="notification is-light" style="max-height: 200px; overflow-y: auto; margin-top: 10px;"></div>
             </div>
           </div>
           <div class="field">
-            <label class="label">Comments</label>
+            <label class="label" data-translate="editFormComments">Comments</label>
             <div class="control">
-              <textarea class="textarea is-info" id="comments" placeholder="Comments that you want to add"></textarea>
+              <textarea class="textarea is-info" id="comments" placeholder="Comments that you want to add" data-translate="editFormComments"></textarea>
             </div>
           </div>
           <div class="columns">
             <div class="column is-6">
-              <button class="button is-primary" type="submit">Update</input>
+              <button class="button is-primary" type="submit" data-translate="editFormUpdate">Update</button>
             </div>
           </div>
         </form>
@@ -106,12 +108,12 @@
 
       <!-- res box -->
       <div class="box">
-        <div id="result" class="notification is-info"></div>
+        <div id="result" class="notification is-info" data-translate="editResultSuccess"></div>
       </div>
 
       <!-- Map box -->
       <div class="box">
-        <h2 class="title is-5">Map</h2>
+        <h2 class="title is-5" data-translate="editMapTitle">Map</h2>
         <div id="map"></div>
       </div>
     </div>
