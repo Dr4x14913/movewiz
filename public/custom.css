@@ -4,9 +4,22 @@
 .suggestion:hover {
   background-color: #f0f0f0;
 }
+
 #map {
   min-height: 300px;
   min-width: 200px;
   margin-top: 1rem;
   z-index: 0;
+}
+
+/* Make form scrollable */
+.form-container {
+  height: 100vh;
+  overflow-y: auto;
+}
+
+/* Ensure the map is fixed to the right */
+.map-container {
+  height: 90vh;
+  overflow-y: auto;
 }
