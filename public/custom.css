@@ -12,17 +12,18 @@
   z-index: 0;
 }
 
-/* Make form scrollable */
+/* Make form scrollable 
 .form-container {
   height: 100vh;
   overflow-y: auto;
 }
 
-/* Ensure the map is fixed to the right */
+/* Ensure the map is fixed to the right 
 .map-container {
-  height: 90vh;
+  height: 100vh;
   overflow-y: auto;
 }
+*/
 
 .form-required::after {
   content: "*";
@@ -32,4 +33,8 @@
   margin-left: .15em;
   vertical-align: text-top;
   background: none;
+}
+
+.main-container {
+  padding-top: 75px;
 }
