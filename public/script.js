@@ -29,6 +29,9 @@ const blueIcon = L.icon({
     shadowAnchor: [12, 41],
 });
 
+/******************************************************************************/
+// Theme managment
+/******************************************************************************/
 function toggleTheme() {
     const toggleButton = document.getElementById('theme-toggle');
     const html_c = document.documentElement;
@@ -37,7 +40,24 @@ function toggleTheme() {
     } else {
         html_c.classList.add('theme-dark');
     }
+
+    // Save the current theme to localStorage
+    const currentTheme = html_c.classList.contains('theme-dark') ? 'dark' : 'light';
+    localStorage.setItem('theme', currentTheme);
 }
+
+window.addEventListener('load', function() {
+    const storedTheme = localStorage.getItem('theme');
+
+    if (storedTheme === 'dark') {
+        document.documentElement.classList.add('theme-dark');
+    } else {
+        // Default to light mode if no theme is stored
+        document.documentElement.classList.remove('theme-dark');
+    }
+});
+/******************************************************************************/
+
 
 // Address Autocomplete Function
 async function auto_complete_addr() {
