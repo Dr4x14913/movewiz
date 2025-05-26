@@ -6,6 +6,7 @@ const translations = {
     email: "Email",
     eventName: "Event Name",
     comments: "Comments",
+    commentsPlaceholder: "Comments that you want to add",
     date: "Date",
     address: "Address",
     submit: "Submit",
@@ -17,8 +18,8 @@ const translations = {
     toggleTheme: "Toggle Theme",
     successMessage: "Your unique URL that you can share: ",
     privateUrl: "Your private URL for edition: ",
-    addressInputLabel: "Enter address...",
-    autocompleteHeader: "Address Autocomplete",
+    addressInputPlaceholder: "Start typing your address",
+    address: "Address",
     mapHeader: "Select Address on Map",
     formTitle: "Enter Details",
     themeToggle: "Toggle Theme",
@@ -78,6 +79,7 @@ const translations = {
     email: "Email",
     eventName: "Nom de l'événement",
     comments: "Commentaires",
+    commentsPlaceholder: "Un petit mot supplémentaire",
     date: "Date",
     address: "Adresse",
     submit: "Soumettre",
@@ -89,8 +91,8 @@ const translations = {
     toggleTheme: "Basculer le thème",
     successMessage: "Votre URL unique que vous pouvez partager : ",
     privateUrl: "Votre URL privée pour l'édition : ",
-    addressInputLabel: "Entrez une adresse...",
-    autocompleteHeader: "Autocomplétion d'adresse",
+    addressInputPlaceholder: "Commencez à taper une adresse",
+    address: "Adresse",
     mapHeader: "Sélectionnez l'adresse sur la carte",
     formTitle: "Entrez les détails",
     themeToggle: "Basculer le thème",
@@ -155,6 +157,14 @@ function applyTranslations() {
     const key = el.getAttribute("data-translate");
     if (translations[lang][key]) {
       el.textContent = translations[lang][key];
+    }
+  });
+
+  // Handle input placeholders
+  document.querySelectorAll("[data-translate-placeholder]").forEach(el => {
+    const key = el.getAttribute("data-translate-placeholder");
+    if (translations[lang][key]) {
+      el.setAttribute("placeholder", translations[lang][key]);
     }
   });
 }

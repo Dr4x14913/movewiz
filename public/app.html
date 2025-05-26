@@ -63,17 +63,17 @@
               <div class="columns">
                 <div class="column">
                   <div class="field">
-                    <label class="label" data-translate="firstName">First Name</label>
+                    <label class="label form-required" data-translate="firstName">First Name</label>
                     <div class="control">
-                      <input class="input is-primary" type="text" id="firstName" placeholder="Enter first name" required />
+                      <input class="input is-primary" type="text" id="firstName" data-translate-placeholder="firstName" required />
                     </div>
                   </div>
                 </div>
                 <div class="column">
                   <div class="field">
-                    <label class="label" data-translate="lastName">Last Name</label>
+                    <label class="label form-required" data-translate="lastName">Last Name</label>
                     <div class="control">
-                      <input class="input is-primary" type="text" id="lastName" placeholder="Enter last name" required />
+                      <input class="input is-primary" type="text" id="lastName" data-translate-placeholder="lastName" required />
                     </div>
                   </div>
                 </div>
@@ -83,17 +83,17 @@
               <div class="columns">
                 <div class="column">
                   <div class="field">
-                    <label class="label" data-translate="email">Email</label>
+                    <label class="label form-required" data-translate="email">Email</label>
                     <div class="control">
-                      <input class="input is-primary" type="email" id="email" placeholder="Enter email" required />
+                      <input class="input is-primary" type="email" id="email" data-translate-placeholder="email" required />
                     </div>
                   </div>
                 </div>
                 <div class="column">
                   <div class="field">
-                    <label class="label" data-translate="eventName">Event Name</label>
+                    <label class="label form-required" data-translate="eventName">Event Name</label>
                     <div class="control">
-                      <input class="input is-primary" type="text" id="eventName" placeholder="Enter event name" required />
+                      <input class="input is-primary" type="text" id="eventName" data-translate-placeholder="eventName" required />
                     </div>
                   </div>
                 </div>
@@ -103,7 +103,7 @@
               <div class="columns">
                 <div class="column">
                   <div class="field">
-                    <label class="label" data-translate="date">Calendar Picker</label>
+                    <label class="label form-required" data-translate="date">Calendar Picker</label>
                     <div class="control">
                       <input class="input is-primary" type="date" id="datePicker" required />
                     </div>
@@ -111,8 +111,9 @@
                 </div>
                 <div class="column">
                   <div class="field">
+                    <label class="label form-required" data-translate="address">Addr</label>
                     <p class="control has-icons-left">
-                      <input class="input is-primary" type="text" id="addressInput" placeholder="Enter address..." required />
+                      <input class="input is-primary" type="text" id="addressInput" data-translate-placeholder="addressInputPlaceholder" required />
                       <span class="icon is-left">
                         <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
                       </span>
@@ -125,7 +126,7 @@
               <div class="field">
                 <label class="label" data-translate="comments">Comments</label>
                 <div class="control">
-                  <textarea class="textarea is-info" id="comments" placeholder="Comments that you want to add"></textarea>
+                  <textarea class="textarea is-info" id="comments" data-translate-placeholder="commentsPlaceholder"></textarea>
                 </div>
               </div>
 
