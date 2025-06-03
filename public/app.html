@@ -154,9 +154,10 @@
     initMap();
     updateMapPos(45.3422689, 5.8146864);
   });
+  
   const addressInput = document.getElementById('addressInput');
   addressInput.addEventListener('input', auto_complete_addr);
-  
+
   document.getElementById('eventForm').addEventListener('submit', function(event) {
     event.preventDefault();
     submitEventForm();

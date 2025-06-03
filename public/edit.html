@@ -23,7 +23,8 @@
     <div class="modal-background"></div>
     <div class="modal-card">
       <header class="modal-card-head">
-        <p class="modal-card-title">Error</p>
+        <p class="modal-card-title" data-translate="modalError">Error</p>
+        <div class="delete" onclick="closeModal('errorModal')"></div>
       </header>
       <section class="modal-card-body">
         <div class="content">
@@ -31,92 +32,119 @@
           <ul id="modalMessage"></ul>
         </div>
       </section>
-      <footer class="modal-card-foot">
-        <button class="modal-card-footer-item" onclick="closeModal('errorModal')">Close</button>
-      </footer>
     </div>
   </div>
-  <div style="height: 100px;"></div>
 
   <section class="section">
-    <!-- Theme Toggle Button -->
+    <!-- navbar -->
     <nav class="navbar is-fixed-top">
       <div class="navbar-brand">
-        <a class="navbar-item" href="#">Movwiz</a>
+        <a class="navbar-item" href="#">Movewiz</a>
       </div>
       <a class="navbar-item button is-primary" onclick="toggleLanguage()" data-translate="curLang">FR</a>
-      <div class="navbar-item has-text-weight-bold" data-translate="editPageTitle">Edit Event Details</div>
-
       <div class="navbar-end">
         <a class="navbar-item button is-primary" id="theme-toggle" onclick="toggleTheme()">
           <span class="icon">
             <i class="fas fa-moon"></i>
           </span>
-          <span>Toggle Theme</span>
+          <span data-translate="theme">Toggle Theme</span>
         </a>
       </div>
     </nav>
-
-    <div class="container is-flex is-justify-content-center is-flex-direction-column" style="max-width: 800px;">
-      <div class="box">
-        <h2 class="title is-5" data-translate="editPageTitle">Edit Event - Movwiz</h2>
-        <form id="updateForm">
-          <div class="columns">
-            <div class="column is-6">
-              <p class="title is-6" data-translate="editFormEventName">Event Name</p>
-              <input class="input" type="text" id="eventName" data-translate="editFormEventName">
-            </div>
-            <div class="column is-6">
-              <p class="title is-6" data-translate="editFormFirstName">First Name</p>
-              <input class="input" type="text" id="firstName" data-translate="editFormFirstName">
-            </div>
+    <div class="container main-container">
+      <div class="columns is-multiline">
+        <!-- Form on the left -->
+        <div class="column form-container">
+          <div class="box">
+            <h2 class="title is-4" data-translate="editPageTitle">Edit Event - Movwiz</h2>
+            <form id="updateForm">
+              <!-- Row: First Name + Last Name -->
+              <div class="columns">
+                <div class="column">
+                  <div class="field">
+                    <label class="label form-required" data-translate="firstName">First Name</label>
+                    <div class="control">
+                      <input class="input is-primary" type="text" id="firstName" data-translate-placeholder="firstName" required />
+                    </div>
+                  </div>
+                </div>
+                <div class="column">
+                  <div class="field">
+                    <label class="label form-required" data-translate="lastName">Last Name</label>
+                    <div class="control">
+                      <input class="input is-primary" type="text" id="lastName" data-translate-placeholder="lastName" required />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Row: Email + Event Name -->
+              <div class="columns">
+                <div class="column">
+                  <div class="field">
+                    <label class="label form-required" data-translate="email">Email</label>
+                    <div class="control">
+                      <input class="input is-primary" type="email" id="email" data-translate-placeholder="email" required />
+                    </div>
+                  </div>
+                </div>
+                <div class="column">
+                  <div class="field">
+                    <label class="label form-required" data-translate="eventName">Event Name</label>
+                    <div class="control">
+                      <input class="input is-primary" type="text" id="eventName" data-translate-placeholder="eventName" required />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Row: Date Picker + Address -->
+              <div class="columns">
+                <div class="column">
+                  <div class="field">
+                    <label class="label form-required" data-translate="date">Calendar Picker</label>
+                    <div class="control">
+                      <input class="input is-primary" type="date" id="datePicker" required />
+                    </div>
+                  </div>
+                </div>
+                <div class="column">
+                  <div class="field">
+                    <label class="label form-required" data-translate="address">Addr</label>
+                    <p class="control has-icons-left">
+                      <input class="input is-primary" type="text" id="addressInput" data-translate-placeholder="addressInputPlaceholder" required />
+                      <span class="icon is-left">
+                        <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+                      </span>
+                    </p>
+                    <div id="suggestions" class="notification is-light" style="max-height: 150px; overflow-y: auto; margin-top: 10px;"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="field">
+                <label class="label" data-translate="comments">Comments</label>
+                <div class="control">
+                  <textarea class="textarea is-info" id="comments" data-translate-placeholder="commentsPlaceholder"></textarea>
+                </div>
+              </div>
+              <div class="columns">
+                <div class="column">
+                  <button class="button is-primary my-2" type="submit" data-translate="submitModify">Submit</button>
+                </div>
+              </div>
+              <!-- Result notification -->
+              <div id="result" class="notification is-info"></div>
+            </form>
           </div>
-          <div class="columns">
-            <div class="column is-6">
-              <p class="title is-6" data-translate="editFormLastName">Last Name</p>
-              <input class="input" type="text" id="lastName" data-translate="editFormLastName">
-            </div>
-            <div class="column is-6">
-              <p class="title is-6" data-translate="editFormEmail">Email</p>
-              <input class="input" type="text" id="email" data-translate="editFormEmail">
-            </div>
+        </div>
+        <!-- Map on the right -->
+        <div class="column map-container">
+          <div class="box">
+            <h2 class="title is-4" data-translate="mapHeader">Select Address on Map</h2>
+            <div id="map" class="map"></div>
           </div>
-          <div class="columns">
-            <div class="column is-6">
-              <p class="title is-6" data-translate="editFormDatePicker">Date Picker</p>
-              <input class="input" type="date" id="datePicker" data-translate="editFormDatePicker">
-            </div>
-            <div class="column is-6">
-              <p class="title is-6" data-translate="editFormAddress">Address</p>
-              <input class="input" type="text" id="addressInput" oninput="auto_complete_addr()" data-translate="editFormAddress">
-              <div id="suggestions" class="notification is-light" style="max-height: 200px; overflow-y: auto; margin-top: 10px;"></div>
-            </div>
-          </div>
-          <div class="field">
-            <label class="label" data-translate="editFormComments">Comments</label>
-            <div class="control">
-              <textarea class="textarea is-info" id="comments" placeholder="Comments that you want to add" data-translate="editFormComments"></textarea>
-            </div>
-          </div>
-          <div class="columns">
-            <div class="column is-6">
-              <button class="button is-primary" type="submit" data-translate="editFormUpdate">Update</button>
-            </div>
-          </div>
-        </form>
+        </div>
       </div>
-
-      <!-- res box -->
-      <div class="box">
-        <div id="result" class="notification is-info" data-translate="editResultSuccess"></div>
-      </div>
-
-      <!-- Map box -->
-      <div class="box">
-        <h2 class="title is-5" data-translate="editMapTitle">Map</h2>
-        <div id="map"></div>
-      </div>
-    </div>
+    </div>                                                                                                                                                                                  
+  </div>
   </section>
 
   <script>
@@ -158,6 +186,9 @@
           showErrorMessage(["Error fetching event details. Check your url.", error.message]);
         });
     });
+
+    const addressInput = document.getElementById('addressInput');
+    addressInput.addEventListener('input', auto_complete_addr);
 
     document.getElementById('updateForm').addEventListener('submit', function(event) {
       event.preventDefault();
