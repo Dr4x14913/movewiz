@@ -4,6 +4,7 @@ from email_validator import validate_email, EmailNotValidError
 
 from flask import render_template
 from flask import Blueprint, request, jsonify
+from ..config import Config
 from ..extensions import db, limiter
 from ..models import Event, Participant
 from ..services import send_email, notify_all, verify_turnstile
@@ -30,6 +31,32 @@ def _validate_date(value):
         return True
     except (ValueError, TypeError):
         return False
+
+
+def _validate_string(value, max_length):
+    return isinstance(value, str) and len(value) <= max_length
+
+
+def _validate_coord(value, min_value, max_value):
+    """Return the value as a float within [min_value, max_value], else None.
+
+    Accepts numbers and numeric strings (the frontend sends numbers);
+    anything else would make MySQL raise an error (500) on insert/update.
+    """
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, (int, float)):
+        number = float(value)
+    elif isinstance(value, str) and value.strip():
+        try:
+            number = float(value.strip())
+        except ValueError:
+            return None
+    else:
+        return None
+    if not min_value <= number <= max_value:
+        return None
+    return number
 
 
 @api_bp.route('/api/createEvent', methods=['POST'])
@@ -332,6 +359,7 @@ def edit_event():
 
 
 @api_bp.route('/api/registerParticipant', methods=['POST'])
+@limiter.limit("10 per 10 minutes")
 def register_participant():
     """Register a participant for an event
 
@@ -388,6 +416,9 @@ def register_participant():
               type: string
             notifyMe:
               type: boolean
+            turnstileToken:
+              type: string
+              description: Cloudflare Turnstile response token
             eventPageUrl:
               type: string
               description: Base URL for the event (read) page, e.g. https://example.com/event. Backend appends ?token=...
@@ -398,9 +429,13 @@ def register_participant():
       200:
         description: Participant registered
       400:
-        description: Missing fields / invalid email / invalid date
+        description: Missing fields / invalid email / invalid coordinates / invalid phone number
+      401:
+        description: Invalid Turnstile token
       404:
         description: Event not found
+      409:
+        description: Already registered for this event / event is full
     """
     data = request.get_json()
     required = ['firstName', 'lastName', 'email', 'mode', 'showEmail', 'token', 'eventPageUrl', 'editParticipantPageUrl', 'latitude', 'longitude', 'notifyMe']
@@ -422,16 +457,32 @@ def register_participant():
 
     show_email = data.get('showEmail')
     token = data.get('token')
-    latitude = data.get('latitude')
-    longitude = data.get('longitude')
+    latitude = _validate_coord(data.get('latitude'), -90, 90)
+    longitude = _validate_coord(data.get('longitude'), -180, 180)
+    if latitude is None or longitude is None:
+        return jsonify({'error': 'Invalid latitude or longitude'}), 400
     address = data.get('address') or ''
     comments = data.get('comments')
     phone_number = data.get('phoneNumber', '')
+    if not _validate_string(phone_number, 20):
+        return jsonify({'error': 'Invalid phone number'}), 400
     notify_me = data.get('notifyMe')
+
+    if not verify_turnstile(data.get('turnstileToken')):
+        return jsonify({'error': 'Invalid or missing Turnstile token'}), 401
 
     event = Event.query.filter_by(readToken=token).first()
     if not event:
         return jsonify({'error': 'Event not found'}), 404
+
+    # The same person (same email) can only register once per event.
+    if Participant.query.filter_by(eventId=event.id, email=email).first():
+        return jsonify({'error': 'Already registered'}), 409
+
+    if Config.MAX_PARTICIPANTS_PER_EVENT is not None:
+        count = Participant.query.filter_by(eventId=event.id).count()
+        if count >= Config.MAX_PARTICIPANTS_PER_EVENT:
+            return jsonify({'error': 'Event is full'}), 409
 
     contact_token = str(uuid.uuid4())
     edit_token = str(uuid.uuid4())

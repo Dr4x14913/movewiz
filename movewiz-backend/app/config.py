@@ -1,6 +1,14 @@
 import os
 
 
+def _max_participants(raw):
+    try:
+        value = int(raw.strip())
+    except (ValueError, AttributeError):
+        return None
+    return value if value > 0 else None
+
+
 class Config:
     # CORS
     CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '*')
@@ -31,3 +39,6 @@ class Config:
 
     # Cloudflare Turnstile (leave empty to skip verification, e.g. local dev)
     TURNSTILE_SECRET_KEY = os.environ.get('TURNSTILE_SECRET_KEY', '')
+
+    # Optional cap on the number of participants per event (empty = no cap)
+    MAX_PARTICIPANTS_PER_EVENT = _max_participants(os.environ.get('MAX_PARTICIPANTS_PER_EVENT', ''))

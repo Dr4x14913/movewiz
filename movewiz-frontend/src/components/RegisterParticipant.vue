@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { api } from '../api'
 import Card from './Card.vue'
 import LocationPicker from './LocationPicker.vue'
+import Turnstile from './Turnstile.vue'
 import PopUp from './PopUp.vue'
 import Spinner from './Spinner.vue'
 import FormLayout from '../components/FormLayout.vue'
@@ -33,6 +34,10 @@ const lastName = ref('')
 const email = ref('')
 const mode = ref('passenger')
 const hideEmail = ref(false)
+
+const turnstileSiteKey: string = import.meta.env.VITE_TURNSTILE_SITE_KEY || ''
+const turnstileWidget = ref<InstanceType<typeof Turnstile> | null>(null)
+const turnstileToken = ref('')
 
 const phoneNumber = ref('')
 const comments = ref('')
@@ -103,6 +108,7 @@ async function submitForm() {
       notifyMe: notifyMe.value,
       phoneNumber: phoneNumber.value,
       comments: comments.value,
+      turnstileToken: turnstileToken.value || turnstileWidget.value?.getResponse() || '',
       language: locale.value,
     }
 
@@ -134,6 +140,9 @@ async function submitForm() {
     }
   } finally {
     isSubmitting.value = false
+    // Turnstile tokens are single-use: reset the widget for the next attempt
+    turnstileToken.value = ''
+    turnstileWidget.value?.reset()
   }
 }
 
@@ -201,6 +210,14 @@ function onSuccessConfirm() {
           <div class="form__field">
             <label for="reg-comments">{{ $t('registerParticipant.details.comments') }}</label>
             <textarea id="reg-comments" v-model="comments" rows="4" :placeholder="$t('registerParticipant.details.commentsPlaceholder')"></textarea>
+          </div>
+
+          <div v-if="turnstileSiteKey" class="form__field form__field--full">
+            <Turnstile
+              ref="turnstileWidget"
+              :sitekey="turnstileSiteKey"
+              @token="turnstileToken = $event"
+            />
           </div>
         </div>
       </Card>
