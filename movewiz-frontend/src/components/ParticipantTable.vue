@@ -550,13 +550,15 @@ function goSendMessage(token: string) {
   font-weight: 600;
 }
 
+/* Same convention as the map (markers, legend, popup pill):
+   driver = secondary-green, passenger = primary-green */
 .participant-table__badge--driver {
-  background-color: var(--color-primary-green);
+  background-color: var(--color-secondary-green);
   color: white;
 }
 
 .participant-table__badge--passenger {
-  background-color: var(--color-secondary-green);
+  background-color: var(--color-primary-green);
   color: white;
 }
 

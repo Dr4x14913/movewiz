@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, watch } from 'vue'
 import { api } from '../api'
 import Card from '../components/Card.vue'
 import CardRow from '../components/CardRow.vue'
@@ -42,6 +42,8 @@ const long_ = ref(0)
 const comments = ref('')
 const readUrl = ref('')
 
+let loadSeq = 0
+
 onMounted(async () => {
   if (!props.token) {
     isErrored.value = true
@@ -51,10 +53,23 @@ onMounted(async () => {
   await fetchEvent()
 })
 
+// The router reuses this component when only the token query changes, so
+// navigating between two edit links must reload the event.
+watch(() => props.token, (newToken, oldToken) => {
+  if (!newToken || newToken === oldToken) return
+  form_resp.value = FormResponse.None
+  form_resp_msg.value = ''
+  isErrored.value = false
+  isLoading.value = true
+  fetchEvent()
+})
+
 async function fetchEvent() {
+  const seq = ++loadSeq
   try {
     const res = await api('/api/getEvent?token=' + props.token + '&isEdit=true')
     const data = await res.json()
+    if (seq !== loadSeq) return
     if (!res.ok) {
       isErrored.value = true
       isLoading.value = false
@@ -177,7 +192,7 @@ function goToEvent() {
       </Card>
     </div>
 
-    <FormLayout v-else :submitting="isSubmitting" @submit="submitForm">
+    <FormLayout v-else :submitting="isSubmitting" :submit-label="t('editEvent.submit')" @submit="submitForm">
       <CardRow>
         <Card variant="borderless">
           <div class="form__row">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, watch } from 'vue'
 import { api } from '../api'
 import Card from '../components/Card.vue'
 import CardRow from '../components/CardRow.vue'
@@ -44,6 +44,8 @@ const address = ref('')
 const notifyMe = ref(false)
 const hideEmail = ref(false)
 
+let loadSeq = 0
+
 onMounted(async () => {
   if (!props.token) {
     isErrored.value = true
@@ -53,10 +55,21 @@ onMounted(async () => {
   await fetchParticipant()
 })
 
+// The router reuses this component when only the token query changes, so
+// navigating between two edit links must reload the participant.
+watch(() => props.token, (newToken, oldToken) => {
+  if (!newToken || newToken === oldToken) return
+  isErrored.value = false
+  isLoading.value = true
+  fetchParticipant()
+})
+
 async function fetchParticipant() {
+  const seq = ++loadSeq
   try {
     const res = await api('/api/getParticipant?token=' + props.token)
     const data = await res.json()
+    if (seq !== loadSeq) return
     if (!res.ok) {
       isErrored.value = true
       isLoading.value = false

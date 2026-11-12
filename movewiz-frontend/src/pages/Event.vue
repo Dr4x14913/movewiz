@@ -93,18 +93,38 @@ const mainMarkerPopup = computed(() => {
 const directionsUrl = computed(() => mainMarkerPopup.value?.directions?.url ?? '#')
 const directionsNewTab = computed(() => mainMarkerPopup.value?.directions?.newTab ?? false)
 
-watch(hasToken, async (newVal) => {
-  if (newVal) {
-    isLoading.value = true
-    isErrored.value = false
-    eventData.value = null
-    const result = await fetchEvent()
-    isLoading.value = false
-    if (result) {
-      eventData.value = result
-      await fetchParticipants()
-    }
+// Reload guard: when the user switches between two event tokens, the fetch
+// for the first token may resolve after the second one started — stale
+// results must not overwrite the newer event.
+let loadSeq = 0
+
+async function loadEvent() {
+  const seq = ++loadSeq
+  isLoading.value = true
+  isErrored.value = false
+  eventData.value = null
+  participants.value = []
+  filteredParticipants.value = []
+  const result = await fetchEvent()
+  if (seq !== loadSeq) return
+  isLoading.value = false
+  if (result) {
+    eventData.value = result
+    await fetchParticipants(seq)
   }
+}
+
+watch(hasToken, (newVal) => {
+  if (newVal) loadEvent()
+})
+
+// The router reuses this component when only the token query changes
+// (/event?token=A → /event?token=B), so a changed token must reload the event.
+watch(() => props.token, (newToken) => {
+  if (!newToken || newToken === tokenValue.value) return
+  tokenValue.value = newToken
+  if (hasToken.value) loadEvent()
+  else hasToken.value = true
 })
 
 if (props.token) {
@@ -137,10 +157,11 @@ function goHome() {
   router.push('/')
 }
 
-async function fetchParticipants() {
+async function fetchParticipants(seq: number) {
   try {
     const res = await api('/api/getParticipants?token=' + tokenValue.value)
     const data = await res.json()
+    if (seq !== loadSeq) return
     if (res.ok && Array.isArray(data)) {
       // p.address is stored by the frontend at registration time — no
       // geocoding on the read path, the list renders instantly.
@@ -238,7 +259,7 @@ function formatDate(dateStr: string): string {
         <RegisterParticipant
           v-if="!isErrored && eventData"
           :token="tokenValue"
-          @registered="fetchParticipants"
+          @registered="fetchParticipants(loadSeq)"
           @confirmed="onRegisterConfirmed"
         />
       </Card>
