@@ -1,0 +1,40 @@
+services:
+  movewiz:
+    image: movewiz-frontend:local
+    env_file: stack.env
+    build:
+      context: ./movewiz-frontend/
+      dockerfile: Dockerfile
+      # args:
+      #   VITE_TURNSTILE_SITE_KEY: "${VITE_TURNSTILE_SITE_KEY}"
+    environment:
+      # Where nginx proxies /api/ to (see nginx/default.conf.template).
+      - BACKEND_URL=http://movewiz-server:3000
+    ports:
+      - "8088:80"
+
+  movewiz-server:
+    build:
+      context: movewiz-backend/
+      dockerfile: Dockerfile
+    env_file: stack.env
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_started
+    #volumes:
+    #  - $PWD:/app
+
+  db:
+    image: mariadb:10
+    restart: always
+    environment:
+      - MARIADB_USER=user
+      - MARIADB_PASSWORD=mypswd
+      - MARIADB_DATABASE=my_db
+      - MARIADB_ROOT_PASSWORD=rootpswd
+    volumes:
+      - mariadb_data:/var/lib/mysql/
+
+volumes:
+  mariadb_data:

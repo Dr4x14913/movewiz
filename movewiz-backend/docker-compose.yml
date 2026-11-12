@@ -1,0 +1,28 @@
+services:
+  movewiz-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: stack.env
+    ports:
+      - '3033:3000'
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_started
+    #volumes:
+    #  - $PWD:/app
+
+  db:
+    image: mariadb:10
+    restart: always
+    environment:
+      - MARIADB_USER=user
+      - MARIADB_PASSWORD=mypswd
+      - MARIADB_DATABASE=my_db
+      - MARIADB_ROOT_PASSWORD=rootpswd
+    volumes:
+      - mariadb_data:/var/lib/mysql/
+
+volumes:
+  mariadb_data:

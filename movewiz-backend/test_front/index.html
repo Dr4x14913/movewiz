@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movewiz Test Client</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f5f5; }
+        h1 { color: #1c8046; margin-bottom: 20px; }
+        h2 { color: #27AE60; margin: 20px 0 10px; border-bottom: 2px solid #27AE60; padding-bottom: 5px; }
+        .section { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        label { display: block; margin: 10px 0 5px; font-weight: bold; }
+        input, textarea, select { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 5px; }
+        textarea { min-height: 60px; }
+        button { background: #1c8046; color: #fff; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 5px 0; }
+        button:hover { background: #155d35; }
+        .output { background: #f9f9f9; border: 1px solid #ddd; padding: 10px; margin-top: 10px; border-radius: 4px; white-space: pre-wrap; font-size: 13px; max-height: 300px; overflow-y: auto; }
+        .urls { margin: 10px 0; }
+        .urls a { display: block; color: #27AE60; margin: 3px 0; }
+        .edit-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 14px; transition: box-shadow 0.15s, border-color 0.15s; }
+        .edit-card:hover { box-shadow: 0 2px 6px rgba(0,0,0,0.08); border-color: #27AE60; }
+        .edit-card label { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; color: #333; margin: 0; white-space: nowrap; }
+        .edit-card label input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #1c8046; }
+        .edit-card input[type="text"], .edit-card input[type="number"], .edit-card input[type="email"], .edit-card input[type="date"] { flex: 1; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; transition: border-color 0.15s; background: #fafafa; }
+        .edit-card input[type="text"]:focus, .edit-card input[type="number"]:focus, .edit-card input[type="email"]:focus, .edit-card input[type="date"]:focus { outline: none; border-color: #27AE60; background: #fff; }
+        .edit-card input[type="text"]:disabled, .edit-card input[type="number"]:disabled, .edit-card input[type="email"]:disabled, .edit-card input[type="date"]:disabled { background: #f0f0f0; color: #aaa; cursor: not-allowed; }
+        .edit-info { display: inline-block; background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 3px; font-size: 12px; margin-left: 8px; }
+    </style>
+</head>
+<body>
+    <h1>Movewiz Test Client</h1>
+    <label>API Endpoint</label>
+    <input id="api-endpoint" value="http://localhost:3033" style="max-width: 400px;">
+    <label>Event Page URL</label>
+    <input id="event-page-url" value="http://localhost:3000/event" style="max-width: 400px;">
+    <label>Edit Page URL</label>
+    <input id="edit-page-url" value="http://localhost:3000/edit" style="max-width: 400px;">
+    <label>Edit Participant Page URL</label>
+    <input id="edit-participant-page-url" value="http://localhost:3000/edit-participant" style="max-width: 400px;">
+
+    <!-- Create Event -->
+    <div class="section">
+        <h2>Create Event</h2>
+        <label>First Name</label><input id="create-firstName" value="John">
+        <label>Last Name</label><input id="create-lastName" value="Doe">
+        <label>Email</label><input id="create-email" value="john@example.com">
+        <label>Event Name</label><input id="create-eventName" value="Test Event">
+        <label>Date</label><input id="create-datePicker" value="2025-05-01">
+        <label>Address</label><input id="create-address" value="123 Test St">
+        <label>Latitude</label><input id="create-latitude" type="number" step="any" value="48.8566">
+        <label>Longitude</label><input id="create-longitude" type="number" step="any" value="2.3522">
+        <label>Comments</label><textarea id="create-comments">Test comments</textarea>
+        <label>Turnstile Token</label>
+        <input id="create-turnstileToken" placeholder="Leave empty locally (verification skipped when no secret key is configured)">
+        <button onclick="createNewEvent()">Create Event</button>
+        <span style="font-size:12px;color:#666;">POST /api/createEvent</span>
+        <div class="urls" id="event-urls"></div>
+        <div class="output" id="create-output"></div>
+    </div>
+
+    <!-- Get Event -->
+    <div class="section">
+        <h2>Get Event</h2>
+        <button onclick="getEvent('read')">Get by Read Token</button>
+        <span style="font-size:12px;color:#666;">GET /api/getEvent?token=...&isEdit=false</span>
+        <button onclick="getEvent('edit')">Get by Edit Token</button>
+        <span style="font-size:12px;color:#666;">GET /api/getEvent?token=...&isEdit=true</span>
+        <div class="output" id="getevent-output"></div>
+    </div>
+
+    <!-- Edit Event -->
+    <div class="section">
+        <h2>Edit Event</h2>
+        <button onclick="fetchEditFields()">Load Editable Fields</button>
+        <span style="font-size:12px;color:#666;">GET /api/getEvent?token=...&isEdit=true</span>
+        <div id="edit-fields-container" style="margin:10px 0;"></div>
+        <button onclick="editEvent()">Update Event</button>
+        <span style="font-size:12px;color:#666;">POST /api/editEvent</span>
+        <div class="output" id="editevent-output"></div>
+    </div>
+
+    <!-- Register Participant -->
+    <div class="section">
+        <h2>Register Participant</h2>
+        <label>First Name</label><input id="reg-firstName" value="Jane">
+        <label>Last Name</label><input id="reg-lastName" value="Smith">
+        <label>Email</label><input id="reg-email" value="jane@example.com">
+        <label>Mode</label><select id="reg-mode"><option value="driver">driver</option><option value="passenger">passenger</option></select>
+        <label>Show Email</label><select id="reg-showEmail"><option value="true">true</option><option value="false">false</option></select>
+        <label>Latitude</label><input id="reg-latitude" type="number" step="any" value="48.8600">
+        <label>Longitude</label><input id="reg-longitude" type="number" step="any" value="2.3600">
+        <label>Comments</label><textarea id="reg-comments">Interested!</textarea>
+        <label>Phone</label><input id="reg-phoneNumber" value="+33612345678">
+        <label>Notify Me</label><select id="reg-notifyMe"><option value="true">true</option><option value="false">false</option></select>
+        <button onclick="registerParticipant()">Register</button>
+        <span style="font-size:12px;color:#666;">POST /api/registerParticipant</span>
+        <div class="output" id="register-output"></div>
+    </div>
+
+    <!-- Get Participants -->
+    <div class="section">
+        <h2>Get Participants</h2>
+        <button onclick="getParticipants()">Fetch Participants</button>
+        <span style="font-size:12px;color:#666;">GET /api/getParticipants?token=...</span>
+        <div class="output" id="participants-output"></div>
+    </div>
+
+    <!-- Contact Participant -->
+    <div class="section">
+        <h2>Contact Participant</h2>
+        <label>Contact Token</label><input id="contact-contactToken" placeholder="Paste participant contactToken here">
+        <label>Your Email</label><input id="contact-senderEmail" value="me@example.com">
+        <label>Message</label><textarea id="contact-message">Hello, is the event still on?</textarea>
+        <label>Turnstile Token</label>
+        <input id="contact-turnstileToken" placeholder="Leave empty locally (verification skipped when no secret key is configured)">
+        <button onclick="contactParticipant()">Send Message</button>
+        <span style="font-size:12px;color:#666;">POST /api/contactParticipant</span>
+        <div class="output" id="contact-output"></div>
+    </div>
+
+    <script>
+        function getAPI() { return document.getElementById('api-endpoint').value.replace(/\/+$/, ''); }
+        let readToken = '';
+        let editToken = '';
+
+        async function api(method, path, body) {
+            const opts = { method, headers: { 'Content-Type': 'application/json' } };
+            if (body) opts.body = JSON.stringify(body);
+            try {
+                const res = await fetch(getAPI() + path, opts);
+                const data = await res.json().catch(() => ({ error: 'Invalid JSON response' }));
+                return { status: res.status, data, ok: res.ok };
+            } catch (e) {
+                return { status: 0, data: { error: e.message }, ok: false };
+            }
+        }
+
+        function out(id, text) { document.getElementById(id).textContent = JSON.stringify(text, null, 2); }
+
+        async function createNewEvent() {
+            const outputEl = document.getElementById('create-output');
+            outputEl.textContent = 'Sending...';
+            const body = {
+                firstName: document.getElementById('create-firstName').value,
+                lastName: document.getElementById('create-lastName').value,
+                email: document.getElementById('create-email').value,
+                eventName: document.getElementById('create-eventName').value,
+                datePicker: document.getElementById('create-datePicker').value,
+                address: document.getElementById('create-address').value,
+                latitude: parseFloat(document.getElementById('create-latitude').value),
+                longitude: parseFloat(document.getElementById('create-longitude').value),
+                comments: document.getElementById('create-comments').value,
+                turnstileToken: document.getElementById('create-turnstileToken').value,
+                eventPageUrl: document.getElementById('event-page-url').value.replace(/\/+$/, ''),
+                editPageUrl: document.getElementById('edit-page-url').value.replace(/\/+$/, ''),
+            };
+            try {
+                const res = await fetch(getAPI() + '/api/createEvent', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                outputEl.textContent = JSON.stringify({ status: res.status, data }, null, 2);
+                if (res.ok && data.readUrl) {
+                    readToken = new URL(data.readUrl).searchParams.get('token');
+                    editToken = new URL(data.writeUrl).searchParams.get('token');
+                    document.getElementById('event-urls').innerHTML =
+                        `<a href="${data.readUrl}" target="_blank">Read URL</a><a href="${data.writeUrl}" target="_blank">Write URL</a>`;
+                }
+            } catch (e) {
+                outputEl.textContent = 'Error: ' + e.message;
+            }
+        }
+
+        async function getEvent(type) {
+            const token = type === 'read' ? readToken : editToken;
+            if (!token) return out('getevent-output', 'Create an event first');
+            const r = await api('GET', `/api/getEvent?token=${token}&isEdit=${type === 'edit'}`);
+            out('getevent-output', r.data);
+        }
+
+        let editableFields = [];
+
+        async function fetchEditFields() {
+            if (!editToken) return out('editevent-output', 'Create an event first');
+            const r = await api('GET', `/api/getEvent?token=${editToken}&isEdit=true`);
+            if (!r.ok || !r.data.event) return out('editevent-output', 'Failed to fetch event');
+            editableFields = r.data.event.editableFields || [];
+            delete r.data.event.editableFields;
+            out('editevent-output', r.data);
+
+            const container = document.getElementById('edit-fields-container');
+            const fieldLabels = {
+                firstName: 'First Name', lastName: 'Last Name', email: 'Email',
+                eventName: 'Event Name', datePicker: 'Date', address: 'Address',
+                latitude: 'Latitude', longitude: 'Longitude', comments: 'Comments'
+            };
+            const fieldInputs = {
+                firstName: 'text', lastName: 'text', email: 'email',
+                eventName: 'text', datePicker: 'date', address: 'text',
+                latitude: 'number', longitude: 'number', comments: 'text'
+            };
+            const defaultValues = {
+                firstName: 'Updated Name', lastName: 'Updated Last', email: 'new@example.com',
+                eventName: 'Updated Event Name', datePicker: '2025-06-01', address: '456 Updated St',
+                latitude: 48.9, longitude: 2.4, comments: 'Updated comments'
+            };
+
+            container.innerHTML = '';
+            editableFields.forEach((field, index) => {
+                const type = fieldInputs[field] || 'text';
+                const label = fieldLabels[field] || field;
+                const inputId = `edit-field-${index}`;
+                const card = document.createElement('div');
+                card.className = 'edit-card';
+                card.innerHTML =
+                    `<label><input type="checkbox" data-field="${field}" checked></label>` +
+                    `<span style="min-width:100px;font-weight:500;color:#444;">${label}</span>` +
+                    `<input type="${type}" id="${inputId}" data-field-input="${field}" value="${defaultValues[field] ?? ''}">`;
+                container.appendChild(card);
+            });
+        }
+
+        async function editEvent() {
+            if (!editToken) return out('editevent-output', 'Create an event first');
+            const body = { editToken: editToken };
+            const checkboxes = document.querySelectorAll('#edit-fields-container input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    const field = cb.getAttribute('data-field');
+                    const inputEl = document.querySelector(`#edit-fields-container input[data-field-input="${field}"]`);
+                    let val = inputEl ? inputEl.value : '';
+                    if (['latitude', 'longitude'].includes(field)) val = parseFloat(val);
+                    body[field] = val;
+                }
+            });
+            const r = await api('POST', '/api/editEvent', body);
+            out('editevent-output', r.data);
+        }
+
+        async function registerParticipant() {
+            if (!readToken) return out('register-output', 'Create an event first');
+            const body = {
+                firstName: document.getElementById('reg-firstName').value,
+                lastName: document.getElementById('reg-lastName').value,
+                email: document.getElementById('reg-email').value,
+                mode: document.getElementById('reg-mode').value,
+                showEmail: document.getElementById('reg-showEmail').value === 'true',
+                token: readToken,
+                latitude: parseFloat(document.getElementById('reg-latitude').value),
+                longitude: parseFloat(document.getElementById('reg-longitude').value),
+                comments: document.getElementById('reg-comments').value,
+                phoneNumber: document.getElementById('reg-phoneNumber').value,
+                notifyMe: document.getElementById('reg-notifyMe').value === 'true',
+                eventPageUrl: document.getElementById('event-page-url').value.replace(/\/+$/, ''),
+                editParticipantPageUrl: document.getElementById('edit-participant-page-url').value.replace(/\/+$/, ''),
+            };
+            const r = await api('POST', '/api/registerParticipant', body);
+            out('register-output', r.data);
+        }
+
+        async function getParticipants() {
+            if (!readToken) return out('participants-output', 'Create an event first');
+            const r = await api('GET', `/api/getParticipants?token=${readToken}`);
+            out('participants-output', r.data);
+        }
+
+        async function contactParticipant() {
+            const contactToken = document.getElementById('contact-contactToken').value.trim();
+            if (!contactToken) return out('contact-output', 'Enter a contact token');
+            const body = {
+                contactToken: contactToken,
+                turnstileToken: document.getElementById('contact-turnstileToken').value,
+                senderEmail: document.getElementById('contact-senderEmail').value,
+                message: document.getElementById('contact-message').value,
+                eventName: 'Test Event',
+            };
+            const r = await api('POST', '/api/contactParticipant', body);
+            out('contact-output', r.data);
+        }
+
+    </script>
+</body>
+</html>
