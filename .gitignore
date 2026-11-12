@@ -4,3 +4,6 @@ stack.env
 # OS / editor
 .DS_Store
 .idea
+
+TODO.md
+TOFIX.md
