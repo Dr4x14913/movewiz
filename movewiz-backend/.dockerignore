@@ -1,0 +1,11 @@
+.git
+.gitignore
+venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+.env
+*.env
+stack.env.template
+docker-compose.yml
+test_front/

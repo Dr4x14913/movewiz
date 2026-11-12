@@ -7,10 +7,23 @@ from flask import Blueprint, request, jsonify
 from ..config import Config
 from ..extensions import db, limiter
 from ..models import Event, Participant
-from ..services import send_email, notify_all, verify_turnstile
+from ..services import send_email_async, notify_all, verify_turnstile
 from ..email_locales import strings, subject, normalize_lang, get_locale
 
 api_bp = Blueprint('api', __name__)
+
+# The only event fields a client may update through /api/editEvent.
+EDITABLE_EVENT_FIELDS = {
+    'firstName', 'lastName', 'email', 'eventName',
+    'datePicker', 'address', 'latitude', 'longitude', 'comments',
+}
+
+# The only participant fields a client may update through /api/editParticipant.
+EDITABLE_PARTICIPANT_FIELDS = {
+    'firstName', 'lastName', 'mode', 'showEmail',
+    'latitude', 'longitude', 'address', 'comments',
+    'phoneNumber', 'notifyMe',
+}
 
 
 def _missing_fields(data, required):
@@ -19,7 +32,7 @@ def _missing_fields(data, required):
 
 def _validate_email(value):
     try:
-        validate_email(value)
+        validate_email(value, check_deliverability=False)
         return True
     except EmailNotValidError:
         return False
@@ -57,6 +70,43 @@ def _validate_coord(value, min_value, max_value):
     if not min_value <= number <= max_value:
         return None
     return number
+
+
+def _validate_event_updates(data):
+    """Validate the event fields a client may update.
+
+    Returns (updates, errors): updates maps whitelisted fields to
+    normalized values (coordinates as floats), errors lists the names of
+    the invalid fields. Unknown keys are dropped, not applied.
+    """
+    updates = {}
+    errors = []
+    for field, value in data.items():
+        if field not in EDITABLE_EVENT_FIELDS or value is None:
+            continue
+        if field in ('firstName', 'lastName'):
+            ok = _validate_string(value, 255)
+        elif field == 'email':
+            ok = value == '' or _validate_email(value)
+        elif field == 'eventName':
+            ok = _validate_string(value, 255) and value != ''
+        elif field == 'datePicker':
+            ok = isinstance(value, str) and _validate_date(value)
+        elif field == 'address':
+            ok = _validate_string(value, 65535)
+        elif field == 'latitude':
+            value = _validate_coord(value, -90, 90)
+            ok = value is not None
+        elif field == 'longitude':
+            value = _validate_coord(value, -180, 180)
+            ok = value is not None
+        elif field == 'comments':
+            ok = isinstance(value, str)
+        if ok:
+            updates[field] = value
+        else:
+            errors.append(field)
+    return updates, errors
 
 
 @api_bp.route('/api/createEvent', methods=['POST'])
@@ -149,8 +199,10 @@ def create_event():
     event_name = data.get('eventName')
     address = data.get('address')
     comments = data.get('comments')
-    latitude = data.get('latitude')
-    longitude = data.get('longitude')
+    latitude = _validate_coord(data.get('latitude'), -90, 90)
+    longitude = _validate_coord(data.get('longitude'), -180, 180)
+    if latitude is None or longitude is None:
+        return jsonify({'error': 'Invalid latitude or longitude'}), 400
     turnstile_token = data.get('turnstileToken')
 
     if not verify_turnstile(turnstile_token):
@@ -194,7 +246,7 @@ def create_event():
             publicUrl=read_url,
             privateUrl=write_url,
         )
-        send_email(email, subject(lang, 'eventCreated'), html)
+        send_email_async(email, subject(lang, 'eventCreated'), html)
 
     return jsonify({'readUrl': read_url, 'writeUrl': write_url}), 201
 
@@ -328,7 +380,7 @@ def edit_event():
       200:
         description: Event updated
       400:
-        description: Edit token missing / no fields to update
+        description: Edit token missing / no fields to update / invalid field values
       404:
         description: Event not found
     """
@@ -342,13 +394,13 @@ def edit_event():
     if not event:
         return jsonify({'error': 'Event not found'}), 404
 
-    blocked = {'editToken', 'readToken', 'id'}
-    updates = {k: v for k, v in data.items() if k not in blocked}
+    updates, errors = _validate_event_updates(data)
     if not updates:
         return jsonify({'error': 'No fields to update'}), 400
+    if errors:
+        return jsonify({'error': f'Invalid fields: {", ".join(sorted(errors))}'}), 400
     for key, value in updates.items():
-        if hasattr(event, key):
-            setattr(event, key, value)
+        setattr(event, key, value)
 
     db.session.commit()
 
@@ -548,7 +600,7 @@ def register_participant():
         role=mode_label,
         editUrl=edit_url,
     )
-    send_email(email, subject(lang, 'registrationConfirmed'), html)
+    send_email_async(email, subject(lang, 'registrationConfirmed'), html)
 
     return jsonify({'message': 'Participant registered successfully'}), 200
 
@@ -616,14 +668,42 @@ def edit_participant():
     if not participant:
         return jsonify({'error': 'Participant not found'}), 404
 
-    blocked = {'editToken', 'contactToken', 'id', 'eventId', 'registrationDate', 'email'}
-    updates = {k: v for k, v in data.items() if k not in blocked}
+    updates = {k: v for k, v in data.items()
+               if k in EDITABLE_PARTICIPANT_FIELDS and v is not None}
     if not updates:
         return jsonify({'error': 'No fields to update'}), 400
 
+    errors = []
+    for field, value in updates.items():
+        if field in ('firstName', 'lastName'):
+            ok = _validate_string(value, 255)
+        elif field == 'mode':
+            ok = value in ('driver', 'passenger')
+        elif field in ('showEmail', 'notifyMe'):
+            ok = isinstance(value, bool)
+        elif field == 'latitude':
+            ok = _validate_coord(value, -90, 90) is not None
+            if ok:
+                updates[field] = _validate_coord(value, -90, 90)
+        elif field == 'longitude':
+            ok = _validate_coord(value, -180, 180) is not None
+            if ok:
+                updates[field] = _validate_coord(value, -180, 180)
+        elif field == 'address':
+            ok = _validate_string(value, 65535)
+        elif field == 'comments':
+            ok = isinstance(value, str)
+        elif field == 'phoneNumber':
+            ok = _validate_string(value, 20)
+        else:
+            ok = False
+        if not ok:
+            errors.append(field)
+    if errors:
+        return jsonify({'error': f'Invalid fields: {", ".join(sorted(errors))}'}), 400
+
     for key, value in updates.items():
-        if hasattr(participant, key):
-            setattr(participant, key, value)
+        setattr(participant, key, value)
 
     db.session.commit()
 
@@ -830,7 +910,7 @@ def contact_participant():
         message=message,
         url=event_url,
     )
-    send_email(participant.email, subject(lang, 'newMessage').format(event_name=event_name), html)
+    send_email_async(participant.email, subject(lang, 'newMessage').format(event_name=event_name), html)
 
     return jsonify({'success': True})
 

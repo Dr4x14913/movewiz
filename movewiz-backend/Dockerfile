@@ -14,4 +14,6 @@ COPY . .
 EXPOSE 3000
 
 #CMD ["python3", "/app/run.py"]
-CMD ["gunicorn", "--bind", "0.0.0.0:3000", "--workers", "1", "run:app"]
+# --timeout guards against a hung request; emails are sent in background
+# threads, but a slow SMTP relay must still not kill the worker mid-request.
+CMD ["gunicorn", "--bind", "0.0.0.0:3000", "--workers", "1", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "run:app"]
