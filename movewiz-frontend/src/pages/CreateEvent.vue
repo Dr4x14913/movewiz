@@ -113,8 +113,6 @@ async function createEvent() {
         address: effectiveAddress,
         latitude: lat.value,
         longitude: long_.value,
-        eventPageUrl: window.location.origin + '/event',
-        editPageUrl: window.location.origin + '/edit',
         datePicker: date.value,
         comments: comments.value,
         turnstileToken: turnstileToken.value || turnstileWidget.value?.getResponse() || '',

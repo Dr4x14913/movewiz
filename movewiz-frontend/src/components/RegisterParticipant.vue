@@ -18,8 +18,6 @@ enum FormResponse {
 
 const props = defineProps<{
   token: string
-  eventPageUrl: string
-  editParticipantPageUrl: string
 }>()
 
 const emit = defineEmits<{
@@ -100,8 +98,6 @@ async function submitForm() {
       mode: mode.value,
       showEmail: !hideEmail.value,
       token: props.token,
-      eventPageUrl: props.eventPageUrl,
-      editParticipantPageUrl: props.editParticipantPageUrl,
       latitude: lat.value,
       longitude: long_.value,
       address: effectiveAddress,

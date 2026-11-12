@@ -109,6 +109,16 @@ def _validate_event_updates(data):
     return updates, errors
 
 
+def _frontend_url(path, token):
+    """Build a public frontend link from the trusted FRONTEND_BASE_URL config.
+
+    These links are embedded in notification emails sent to every participant,
+    so they must never be built from client input: a malicious browser could
+    otherwise inject phishing URLs into those emails.
+    """
+    return f"{Config.FRONTEND_BASE_URL}{path}?token={token}"
+
+
 @api_bp.route('/api/createEvent', methods=['POST'])
 @limiter.limit("15 per 10 minutes")
 def create_event():
@@ -132,8 +142,6 @@ def create_event():
             - latitude
             - longitude
             - turnstileToken
-            - eventPageUrl
-            - editPageUrl
           properties:
             firstName:
               type: string
@@ -159,12 +167,6 @@ def create_event():
             turnstileToken:
               type: string
               description: Cloudflare Turnstile response token
-            eventPageUrl:
-              type: string
-              description: Base URL for the event (read) page, e.g. https://example.com/event
-            editPageUrl:
-              type: string
-              description: Base URL for the edit (write) page, e.g. https://example.com/edit
     responses:
       201:
         description: Event created
@@ -181,7 +183,7 @@ def create_event():
         description: Invalid Turnstile token
     """
     data = request.get_json()
-    required = ['eventName', 'datePicker', 'address', 'latitude', 'longitude', 'eventPageUrl', 'editPageUrl']
+    required = ['eventName', 'datePicker', 'address', 'latitude', 'longitude']
     missing = _missing_fields(data, required)
     if missing:
         return jsonify({'error': f'Missing fields: {", ".join(missing)}'}), 400
@@ -227,9 +229,9 @@ def create_event():
     db.session.add(event)
     db.session.commit()
 
-    # Construct URLs from frontend-provided base URLs
-    read_url = f"{data.get('eventPageUrl')}?token={read_token}"
-    write_url = f"{data.get('editPageUrl')}?token={edit_token}"
+    # Build the links server-side from FRONTEND_BASE_URL (never from the client).
+    read_url = _frontend_url('/event', read_token)
+    write_url = _frontend_url('/edit', edit_token)
 
     # Send confirmation email (only if an email was provided)
     lang = normalize_lang(data.get('language'))
@@ -334,7 +336,7 @@ def get_event():
     data.pop('editToken', None)
     if is_edit:
         data['editableFields'] = ['firstName', 'lastName', 'email', 'eventName', 'datePicker', 'address', 'latitude', 'longitude', 'comments']
-        data['readUrl'] = f"{request.host_url}event?token={event.readToken}"
+        data['readUrl'] = _frontend_url('/event', event.readToken)
     return jsonify({'event': data})
 
 
@@ -433,8 +435,6 @@ def register_participant():
             - mode
             - showEmail
             - token
-            - eventPageUrl
-            - editParticipantPageUrl
             - latitude
             - longitude
             - notifyMe
@@ -471,12 +471,6 @@ def register_participant():
             turnstileToken:
               type: string
               description: Cloudflare Turnstile response token
-            eventPageUrl:
-              type: string
-              description: Base URL for the event (read) page, e.g. https://example.com/event. Backend appends ?token=...
-            editParticipantPageUrl:
-              type: string
-              description: Base URL for the edit participant page, e.g. https://example.com/edit-participant. Backend appends ?token=...
     responses:
       200:
         description: Participant registered
@@ -490,7 +484,7 @@ def register_participant():
         description: Already registered for this event / event is full
     """
     data = request.get_json()
-    required = ['firstName', 'lastName', 'email', 'mode', 'showEmail', 'token', 'eventPageUrl', 'editParticipantPageUrl', 'latitude', 'longitude', 'notifyMe']
+    required = ['firstName', 'lastName', 'email', 'mode', 'showEmail', 'token', 'latitude', 'longitude', 'notifyMe']
     missing = _missing_fields(data, required)
     if missing:
         return jsonify({'error': f'Missing fields: {", ".join(missing)}'}), 400
@@ -561,7 +555,9 @@ def register_participant():
     # Notify all (uses the language chosen by the person who just registered)
     lang = normalize_lang(data.get('language'))
     mode_label = get_locale(lang)['mode'][mode]
-    url = f"{data.get('eventPageUrl')}?token={token}"
+    # Build the link server-side from FRONTEND_BASE_URL (never from the client);
+    # it is pasted into the notification email sent to every participant.
+    url = _frontend_url('/event', token)
     notify_strings = strings(lang, 'new_participant')
 
     notify_all(
@@ -587,7 +583,7 @@ def register_participant():
 
     # Send confirmation email to the new participant
     registered_strings = strings(lang, 'participant_registered')
-    edit_url = f"{data.get('editParticipantPageUrl')}?token={edit_token}"
+    edit_url = _frontend_url('/edit-participant', edit_token)
     html = render_template('participant_registered.html',
         t=registered_strings,
         lang=lang,
@@ -845,7 +841,6 @@ def contact_participant():
             - turnstileToken
             - senderEmail
             - message
-            - eventPageUrl
           properties:
             contactToken:
               type: string
@@ -857,9 +852,6 @@ def contact_participant():
               format: email
             message:
               type: string
-            eventPageUrl:
-              type: string
-              description: Base URL for the event (read) page, e.g. https://example.com/event. Backend appends ?token=...
     responses:
       200:
         description: Message sent
@@ -876,7 +868,7 @@ def contact_participant():
         description: Participant or event not found
     """
     data = request.get_json()
-    required = ['contactToken', 'senderEmail', 'message', 'eventPageUrl']
+    required = ['contactToken', 'senderEmail', 'message']
     missing = _missing_fields(data, required)
     if missing:
         return jsonify({'error': f'Missing fields: {", ".join(missing)}'}), 400
@@ -901,7 +893,7 @@ def contact_participant():
     event_name = event.eventName
     lang = normalize_lang(data.get('language'))
     contact_strings = strings(lang, 'contact')
-    event_url = f"{data.get('eventPageUrl')}?token={event.readToken}"
+    event_url = _frontend_url('/event', event.readToken)
     html = render_template('contact.html',
         t=contact_strings,
         lang=lang,

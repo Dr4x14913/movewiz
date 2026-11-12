@@ -21,6 +21,12 @@ def _log_config_warnings():
             'CORS_ALLOWED_ORIGINS is "*" - any website can call this API. '
             'Restrict it to your frontend origin in production.'
         )
+    if not Config.FRONTEND_BASE_URL:
+        logger.warning(
+            'FRONTEND_BASE_URL is empty - links in notification emails will be '
+            'relative (broken). Set it to your frontend origin, e.g. '
+            'https://movewiz.example.com.'
+        )
 
 
 def create_app():

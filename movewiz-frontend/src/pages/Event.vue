@@ -49,8 +49,6 @@ const eventData = ref<EventData | null>(null)
 const isLoading = ref(false)
 const participants = ref<ParticipantData[]>([])
 const filteredParticipants = ref<ParticipantData[]>([])
-const eventPageUrl = window.location.origin + '/event'
-const editParticipantPageUrl = window.location.origin + '/edit-participant'
 const searchText = ref('')
 const registerCardRef = ref<InstanceType<typeof Card> | null>(null)
 const mapScrollRef = ref<HTMLDivElement | null>(null)
@@ -240,8 +238,6 @@ function formatDate(dateStr: string): string {
         <RegisterParticipant
           v-if="!isErrored && eventData"
           :token="tokenValue"
-          :event-page-url="eventPageUrl"
-          :edit-participant-page-url="editParticipantPageUrl"
           @registered="fetchParticipants"
           @confirmed="onRegisterConfirmed"
         />

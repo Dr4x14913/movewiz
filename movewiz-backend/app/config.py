@@ -13,6 +13,11 @@ class Config:
     # CORS
     CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '*')
 
+    # Public origin of the frontend (e.g. https://movewiz.example.com). Used to
+    # build the links embedded in notification emails. Never taken from the
+    # client, so a malicious browser cannot inject phishing URLs into emails.
+    FRONTEND_BASE_URL = os.environ.get('FRONTEND_BASE_URL', '').rstrip('/')
+
     # Database
     DB_HOST = os.environ.get('DB_HOST', 'localhost')
     DB_PORT = os.environ.get('DB_PORT', '3306')
