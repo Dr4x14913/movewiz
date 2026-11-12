@@ -5,8 +5,8 @@ services:
     build:
       context: ./movewiz-frontend/
       dockerfile: Dockerfile
-      # args:
-      #   VITE_TURNSTILE_SITE_KEY: "${VITE_TURNSTILE_SITE_KEY}"
+      args:
+        VITE_TURNSTILE_SITE_KEY: "${VITE_TURNSTILE_SITE_KEY}"
     environment:
       # Where nginx proxies /api/ to (see nginx/default.conf.template).
       - BACKEND_URL=http://movewiz-server:3000
